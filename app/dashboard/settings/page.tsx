@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [name, setName] = useState("")
   const [major, setMajor] = useState("")
   const [saved, setSaved] = useState(false)
+  const [analysisCount, setAnalysisCount] = useState(0)
 
   useEffect(() => {
     try {
@@ -19,6 +20,7 @@ export default function SettingsPage() {
       setName(profile.name ?? "")
       setMajor(profile.major ?? "")
     } catch {}
+    setAnalysisCount(Object.keys(localStorage).filter(k => k.startsWith("analysis-")).length)
   }, [])
 
   const saveProfile = () => {
@@ -116,9 +118,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between rounded-xl bg-secondary/30 p-4">
               <div>
                 <p className="text-sm font-medium">저장된 강의 수</p>
-                <p className="text-xs text-muted-foreground">
-                  {Object.keys(localStorage).filter(k => k.startsWith("analysis-")).length}개
-                </p>
+                <p className="text-xs text-muted-foreground">{analysisCount}개</p>
               </div>
             </div>
             <Button
