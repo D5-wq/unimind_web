@@ -72,9 +72,9 @@ export default function ExamPage() {
   const [checklist, setChecklist] = useState<CheckItem[]>([])
   const router = useRouter()
 
-  // Timer state
+  // Timer state — display is computed directly from timerRef on each render
   const timerRef = useRef<TimerState>({ target: 25 * 60, elapsed: 0, startedAt: null })
-  const [display, setDisplay] = useState("25:00")
+  const [timerTick, setTimerTick] = useState(0)   // forces re-render for display update
   const [timerRunning, setTimerRunning] = useState(false)
   const [timerFinished, setTimerFinished] = useState(false)
   const [timerTarget, setTimerTarget] = useState(25 * 60)
@@ -96,13 +96,12 @@ export default function ExamPage() {
     }
 
     setTimerTarget(saved.target)
-    setDisplay(fmtTime(rem))
     setTimerFinished(rem <= 0 && saved.elapsed > 0)
 
     const tick = setInterval(() => {
       const s = timerRef.current
       const rem = calcRemaining(s)
-      setDisplay(fmtTime(rem))
+      setTimerTick(t => t + 1)   // trigger re-render so display recalculates
       if (rem <= 0 && s.startedAt !== null) {
         const done: TimerState = { ...s, elapsed: s.target, startedAt: null }
         saveTimer(done)
@@ -110,7 +109,7 @@ export default function ExamPage() {
         setTimerRunning(false)
         setTimerFinished(true)
       }
-    }, 500)
+    }, 200)
 
     return () => clearInterval(tick)
   }, [])
@@ -207,21 +206,99 @@ export default function ExamPage() {
 
   const completedCount = checklist.filter(i => i.completed).length
   const progressPercentage = checklist.length > 0 ? (completedCount / checklist.length) * 100 : 0
+  // Always recalculate from ref so display is fresh on every render
   const remaining = calcRemaining(timerRef.current)
+  const display = fmtTime(remaining)
+
+  const timerCard = (
+    <Card className="rounded-2xl border-border shadow-sm">
+      <CardContent className="p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">집중 타이머</h3>
+          </div>
+          {timerFinished && (
+            <Badge className="rounded-lg bg-green-500/10 text-green-600 border-green-500/20">완료!</Badge>
+          )}
+        </div>
+
+        <div className="mb-4 text-center">
+          <div className={cn(
+            "font-mono text-5xl font-bold tabular-nums",
+            timerFinished ? "text-green-500" :
+            remaining < 60 && timerRunning ? "text-destructive" :
+            "text-foreground"
+          )}>
+            {display}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {timerFinished ? "수고했어요! 잠깐 쉬어가세요" :
+             timerRunning ? "집중 중..." : "일시 정지됨"}
+          </p>
+        </div>
+
+        <Progress
+          value={timerTarget > 0 ? ((timerTarget - remaining) / timerTarget) * 100 : 0}
+          className="mb-4 h-2"
+        />
+
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Button
+            variant={timerRunning ? "outline" : "default"}
+            className="rounded-xl px-6"
+            onClick={toggleTimer}
+            disabled={timerFinished}
+          >
+            {timerRunning
+              ? <><Pause className="mr-2 h-4 w-4" />일시정지</>
+              : <><Play className="mr-2 h-4 w-4" />{timerFinished ? "완료" : "재개"}</>}
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => resetTimer()}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex justify-center gap-2">
+          {PRESETS.map(min => (
+            <button
+              key={min}
+              onClick={() => resetTimer(min * 60)}
+              className={cn(
+                "rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                timerTarget === min * 60
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+              )}
+            >
+              {min}분
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   if (!result) {
     return (
       <div className="flex flex-col">
         <Header title="시험 준비" subtitle="효율적인 시험 대비를 도와드립니다" />
-        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Upload className="h-8 w-8 text-primary" />
+        <div className="flex-1 space-y-6 p-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {timerCard}
+            <Card className="rounded-2xl border-2 border-dashed border-border shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center h-full py-10 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                  <Upload className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="mt-4 font-semibold">강의 PDF를 업로드하면</h3>
+                <p className="mt-1 text-sm text-muted-foreground">시험 포인트와 복습 체크리스트가 생성돼요</p>
+                <Link href="/dashboard/upload" className="mt-4">
+                  <Button size="sm" className="rounded-xl">PDF 업로드하기</Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
-          <h3 className="mt-4 text-lg font-semibold">먼저 강의 PDF를 업로드해주세요</h3>
-          <p className="mt-2 text-sm text-muted-foreground">분석이 완료되면 시험 준비 자료가 자동으로 생성됩니다</p>
-          <Link href="/dashboard/upload" className="mt-6">
-            <Button className="rounded-xl px-8">PDF 업로드하기</Button>
-          </Link>
         </div>
       </div>
     )
@@ -233,82 +310,9 @@ export default function ExamPage() {
 
       <div className="flex-1 space-y-6 p-6">
 
-        {/* 집중 타이머 */}
+        {/* 집중 타이머 + 강의 요약 */}
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="rounded-2xl border-border shadow-sm">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">집중 타이머</h3>
-                </div>
-                {timerFinished && (
-                  <Badge className="rounded-lg bg-green-500/10 text-green-600 border-green-500/20">
-                    완료!
-                  </Badge>
-                )}
-              </div>
-
-              {/* Time display */}
-              <div className="mb-4 text-center">
-                <div className={cn(
-                  "font-mono text-5xl font-bold tabular-nums",
-                  timerFinished ? "text-green-500" :
-                  remaining < 60 && timerRunning ? "text-destructive" :
-                  "text-foreground"
-                )}>
-                  {display}
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {timerFinished ? "수고했어요! 잠깐 쉬어가세요" :
-                   timerRunning ? "집중 중..." : "일시 정지됨"}
-                </p>
-              </div>
-
-              {/* Progress bar */}
-              <Progress
-                value={timerTarget > 0 ? ((timerTarget - remaining) / timerTarget) * 100 : 0}
-                className="mb-4 h-2"
-              />
-
-              {/* Controls */}
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Button
-                  variant={timerRunning ? "outline" : "default"}
-                  className="rounded-xl px-6"
-                  onClick={toggleTimer}
-                  disabled={timerFinished}
-                >
-                  {timerRunning
-                    ? <><Pause className="mr-2 h-4 w-4" />일시정지</>
-                    : <><Play className="mr-2 h-4 w-4" />{timerFinished ? "시작" : "재개"}</>}
-                </Button>
-                <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => resetTimer()}>
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Preset buttons */}
-              <div className="flex justify-center gap-2">
-                {PRESETS.map(min => (
-                  <button
-                    key={min}
-                    onClick={() => resetTimer(min * 60)}
-                    className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-medium transition-colors",
-                      timerTarget === min * 60
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
-                  >
-                    {min}분
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 강의 요약 카드 */}
+          {timerCard}
           <Card className="rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
             <CardContent className="p-6 flex flex-col justify-center h-full">
               <div className="flex items-center gap-4 mb-4">
