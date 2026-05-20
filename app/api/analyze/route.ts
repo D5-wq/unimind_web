@@ -1,50 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { extractText } from 'unpdf'
-import JSZip from 'jszip'
 import { supabase } from '@/lib/supabase'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-async function extractPptxText(buffer: Uint8Array): Promise<string> {
-  const zip = await JSZip.loadAsync(buffer)
-  const slideFiles = Object.keys(zip.files)
-    .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => {
-      const na = parseInt(a.match(/(\d+)/)?.[1] ?? '0')
-      const nb = parseInt(b.match(/(\d+)/)?.[1] ?? '0')
-      return na - nb
-    })
-
-  const texts: string[] = []
-  for (const slideFile of slideFiles) {
-    const xml = await zip.files[slideFile].async('text')
-    const matches = xml.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) ?? []
-    const slideText = matches.map(m => m.replace(/<[^>]+>/g, '')).join(' ').trim()
-    if (slideText) texts.push(slideText)
-  }
-  return texts.join('\n')
-}
-
 export async function POST(req: NextRequest) {
-  const formData = await req.formData()
-  const file = formData.get('file') as File
+  const { text, fileName } = await req.json()
 
-  if (!file) {
-    return NextResponse.json({ error: '파일이 없어요' }, { status: 400 })
+  if (!text || !fileName) {
+    return NextResponse.json({ error: '텍스트 또는 파일명이 없어요' }, { status: 400 })
   }
-
-  const buffer = new Uint8Array(await file.arrayBuffer())
-  let text = ''
-
-  if (file.name.toLowerCase().endsWith('.pptx')) {
-    text = await extractPptxText(buffer)
-  } else {
-    const { text: pages } = await extractText(buffer, { mergePages: true })
-    text = pages as string
-  }
-
-  text = text.slice(0, 8000)
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -83,7 +48,7 @@ export async function POST(req: NextRequest) {
   const { data: saved, error: saveError } = await supabase
     .from('analyses')
     .insert({
-      file_name: file.name,
+      file_name: fileName,
       one_liner: result.oneLiner,
       flow: result.flow,
       concepts: result.concepts,

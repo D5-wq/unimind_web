@@ -11,6 +11,34 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 
+async function extractTextFromFile(file: File): Promise<string> {
+  if (file.name.toLowerCase().endsWith('.pptx')) {
+    const JSZip = (await import('jszip')).default
+    const buffer = await file.arrayBuffer()
+    const zip = await JSZip.loadAsync(buffer)
+    const slideFiles = Object.keys(zip.files)
+      .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+      .sort((a, b) => {
+        const na = parseInt(a.match(/(\d+)/)?.[1] ?? '0')
+        const nb = parseInt(b.match(/(\d+)/)?.[1] ?? '0')
+        return na - nb
+      })
+    const texts: string[] = []
+    for (const slideFile of slideFiles) {
+      const xml = await zip.files[slideFile].async('text')
+      const matches = xml.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) ?? []
+      const slideText = matches.map(m => m.replace(/<[^>]+>/g, '')).join(' ').trim()
+      if (slideText) texts.push(slideText)
+    }
+    return texts.join('\n')
+  } else {
+    const { extractText } = await import('unpdf')
+    const buffer = new Uint8Array(await file.arrayBuffer())
+    const { text } = await extractText(buffer, { mergePages: true })
+    return text as string
+  }
+}
+
 interface UploadedFile {
   id: string
   name: string
@@ -35,19 +63,18 @@ export default function UploadPage() {
   const router = useRouter()
 
   const analyzeFile = async (file: File, id: string) => {
-    // 업로드 중 표시
-    setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "uploading", progress: 30 } : f))
+    setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "uploading", progress: 20 } : f))
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      // 브라우저에서 텍스트 추출 (파일 바이너리 전송 없음)
+      const text = await extractTextFromFile(file)
 
-      // 분석 중 표시
-      setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "analyzing", progress: 70 } : f))
+      setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "analyzing", progress: 60 } : f))
 
       const res = await fetch("/api/analyze", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 8000), fileName: file.name }),
       })
 
       const result = await res.json()
