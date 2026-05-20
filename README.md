@@ -2,6 +2,8 @@
 
 > 강의 자료(PDF/PPTX)를 업로드하면 AI가 핵심 개념을 정리하고 시험을 대비해주는 대학생 맞춤 학습 도우미
 
+**🔗 라이브 데모: [unimind-web.vercel.app](https://unimind-web.vercel.app)**
+
 ---
 
 ## 주요 기능
