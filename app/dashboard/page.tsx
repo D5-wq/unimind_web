@@ -194,7 +194,8 @@ export default function DashboardPage() {
                   </Link>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {analyses.slice(0, 5).map(entry => (
+                  <div className="max-h-[420px] overflow-y-auto space-y-2 pr-1">
+                  {analyses.map(entry => (
                     <div key={entry.id} className="group flex items-center gap-3 rounded-xl bg-secondary/30 p-3 transition-colors hover:bg-secondary/50">
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
                         <FileText className="h-5 w-5 text-primary" />
@@ -217,6 +218,7 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   ))}
+                  </div>
                 </CardContent>
               </Card>
             )}

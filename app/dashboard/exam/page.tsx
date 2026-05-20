@@ -1,19 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Header } from "@/components/dashboard/header"
 import {
-  Clock,
-  BookOpen,
-  CheckSquare,
-  FileText,
-  Sparkles,
-  Target,
-  Brain,
-  AlertTriangle,
-  CheckCircle,
-  Circle,
-  Upload,
+  Clock, BookOpen, CheckSquare, FileText, Sparkles, Target, Brain,
+  AlertTriangle, CheckCircle, Circle, Upload, Play, Pause, RotateCcw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,6 +15,45 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
+// ──────────────────────────────────────────────
+// Timer helpers
+// ──────────────────────────────────────────────
+interface TimerState {
+  target: number       // total seconds
+  elapsed: number      // elapsed seconds when paused
+  startedAt: number | null  // performance.now()-style timestamp
+}
+
+const TIMER_KEY = "study-timer"
+const PRESETS = [15, 25, 50]
+
+function readTimer(): TimerState {
+  try {
+    const raw = localStorage.getItem(TIMER_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return { target: 25 * 60, elapsed: 0, startedAt: null }
+}
+
+function saveTimer(s: TimerState) {
+  localStorage.setItem(TIMER_KEY, JSON.stringify(s))
+}
+
+function calcRemaining(s: TimerState): number {
+  const elapsed = s.startedAt != null
+    ? s.elapsed + (Date.now() - s.startedAt) / 1000
+    : s.elapsed
+  return Math.max(0, s.target - elapsed)
+}
+
+function fmtTime(secs: number): string {
+  const s = Math.max(0, Math.floor(secs))
+  return `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`
+}
+
+// ──────────────────────────────────────────────
+// Analysis types
+// ──────────────────────────────────────────────
 interface AnalysisResult {
   oneLiner: string
   flow: string[]
@@ -32,17 +62,88 @@ interface AnalysisResult {
 }
 
 interface CheckItem {
-  id: string
-  task: string
-  completed: boolean
+  id: string; task: string; completed: boolean
 }
 
+// ──────────────────────────────────────────────
 export default function ExamPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [latestId, setLatestId] = useState<string | null>(null)
   const [checklist, setChecklist] = useState<CheckItem[]>([])
   const router = useRouter()
 
+  // Timer state
+  const timerRef = useRef<TimerState>({ target: 25 * 60, elapsed: 0, startedAt: null })
+  const [display, setDisplay] = useState("25:00")
+  const [timerRunning, setTimerRunning] = useState(false)
+  const [timerFinished, setTimerFinished] = useState(false)
+  const [timerTarget, setTimerTarget] = useState(25 * 60)
+
+  // ── Timer init & tick ──
+  useEffect(() => {
+    const saved = readTimer()
+    const rem = calcRemaining(saved)
+
+    if (rem > 0 && saved.startedAt === null) {
+      // Auto-start on page enter
+      const next: TimerState = { ...saved, startedAt: Date.now() }
+      saveTimer(next)
+      timerRef.current = next
+      setTimerRunning(true)
+    } else {
+      timerRef.current = saved
+      setTimerRunning(saved.startedAt !== null && rem > 0)
+    }
+
+    setTimerTarget(saved.target)
+    setDisplay(fmtTime(rem))
+    setTimerFinished(rem <= 0 && saved.elapsed > 0)
+
+    const tick = setInterval(() => {
+      const s = timerRef.current
+      const rem = calcRemaining(s)
+      setDisplay(fmtTime(rem))
+      if (rem <= 0 && s.startedAt !== null) {
+        const done: TimerState = { ...s, elapsed: s.target, startedAt: null }
+        saveTimer(done)
+        timerRef.current = done
+        setTimerRunning(false)
+        setTimerFinished(true)
+      }
+    }, 500)
+
+    return () => clearInterval(tick)
+  }, [])
+
+  const toggleTimer = () => {
+    const s = timerRef.current
+    if (s.startedAt !== null) {
+      const elapsed = s.elapsed + (Date.now() - s.startedAt) / 1000
+      const next: TimerState = { ...s, elapsed, startedAt: null }
+      saveTimer(next)
+      timerRef.current = next
+      setTimerRunning(false)
+    } else {
+      const next: TimerState = { ...s, startedAt: Date.now() }
+      saveTimer(next)
+      timerRef.current = next
+      setTimerRunning(true)
+      setTimerFinished(false)
+    }
+  }
+
+  const resetTimer = (target?: number) => {
+    const t = target ?? timerRef.current.target
+    const next: TimerState = { target: t, elapsed: 0, startedAt: null }
+    saveTimer(next)
+    timerRef.current = next
+    setTimerRunning(false)
+    setTimerFinished(false)
+    setDisplay(fmtTime(t))
+    setTimerTarget(t)
+  }
+
+  // ── Analysis load ──
   useEffect(() => {
     const applyResult = (r: AnalysisResult, id: string) => {
       setResult(r)
@@ -59,7 +160,7 @@ export default function ExamPage() {
           })),
           ...r.examPoints.slice(0, 3).map((p, i) => ({
             id: `exam-${i}`,
-            task: `시험 포인트 복습: ${p.slice(0, 40)}${p.length > 40 ? "..." : ""}`,
+            task: `시험 포인트 복습: ${p.slice(0, 50)}${p.length > 50 ? "…" : ""}`,
             completed: false,
           })),
         ]
@@ -71,8 +172,7 @@ export default function ExamPage() {
       const keys = Object.keys(localStorage).filter(k => k.startsWith("analysis-"))
       if (keys.length === 0) return
       keys.sort((a, b) => {
-        const ia = a.replace("analysis-", "")
-        const ib = b.replace("analysis-", "")
+        const ia = a.replace("analysis-", ""), ib = b.replace("analysis-", "")
         try {
           const ma = JSON.parse(localStorage.getItem(`meta-${ia}`) ?? "{}")
           const mb = JSON.parse(localStorage.getItem(`meta-${ib}`) ?? "{}")
@@ -80,29 +180,19 @@ export default function ExamPage() {
         } catch { return 0 }
       })
       const id = keys[0].replace("analysis-", "")
-      try {
-        const saved = JSON.parse(localStorage.getItem(keys[0]) ?? "")
-        applyResult(saved, id)
-      } catch {}
+      try { applyResult(JSON.parse(localStorage.getItem(keys[0]) ?? ""), id) } catch {}
     }
 
-    supabase
-      .from('analyses')
-      .select('id, one_liner, flow, concepts, exam_points')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    supabase.from('analyses').select('id, one_liner, flow, concepts, exam_points')
+      .order('created_at', { ascending: false }).limit(1).single()
       .then(({ data }) => {
-        if (data) {
-          applyResult({
-            oneLiner: data.one_liner ?? '',
-            flow: data.flow as string[],
-            concepts: data.concepts as { name: string; simple: string; why: string }[],
-            examPoints: data.exam_points as string[],
-          }, data.id)
-        } else {
-          loadFromLocalStorage()
-        }
+        if (data) applyResult({
+          oneLiner: data.one_liner ?? '',
+          flow: data.flow as string[],
+          concepts: data.concepts as { name: string; simple: string; why: string }[],
+          examPoints: data.exam_points as string[],
+        }, data.id)
+        else loadFromLocalStorage()
       })
       .catch(() => loadFromLocalStorage())
   }, [])
@@ -117,6 +207,7 @@ export default function ExamPage() {
 
   const completedCount = checklist.filter(i => i.completed).length
   const progressPercentage = checklist.length > 0 ? (completedCount / checklist.length) * 100 : 0
+  const remaining = calcRemaining(timerRef.current)
 
   if (!result) {
     return (
@@ -141,24 +232,101 @@ export default function ExamPage() {
       <Header title="시험 준비" subtitle="효율적인 시험 대비를 도와드립니다" />
 
       <div className="flex-1 space-y-6 p-6">
-        {/* 강의 요약 카드 */}
-        <Card className="rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-                <Target className="h-7 w-7 text-primary-foreground" />
+
+        {/* 집중 타이머 */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="rounded-2xl border-border shadow-sm">
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">집중 타이머</h3>
+                </div>
+                {timerFinished && (
+                  <Badge className="rounded-lg bg-green-500/10 text-green-600 border-green-500/20">
+                    완료!
+                  </Badge>
+                )}
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-foreground">{result.oneLiner}</h2>
-                <p className="text-sm text-muted-foreground">
-                  개념 {result.concepts.length}개 · 시험 포인트 {result.examPoints.length}개
+
+              {/* Time display */}
+              <div className="mb-4 text-center">
+                <div className={cn(
+                  "font-mono text-5xl font-bold tabular-nums",
+                  timerFinished ? "text-green-500" :
+                  remaining < 60 && timerRunning ? "text-destructive" :
+                  "text-foreground"
+                )}>
+                  {display}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {timerFinished ? "수고했어요! 잠깐 쉬어가세요" :
+                   timerRunning ? "집중 중..." : "일시 정지됨"}
                 </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* 10분 핵심 정리 (강의 흐름) */}
+              {/* Progress bar */}
+              <Progress
+                value={timerTarget > 0 ? ((timerTarget - remaining) / timerTarget) * 100 : 0}
+                className="mb-4 h-2"
+              />
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Button
+                  variant={timerRunning ? "outline" : "default"}
+                  className="rounded-xl px-6"
+                  onClick={toggleTimer}
+                  disabled={timerFinished}
+                >
+                  {timerRunning
+                    ? <><Pause className="mr-2 h-4 w-4" />일시정지</>
+                    : <><Play className="mr-2 h-4 w-4" />{timerFinished ? "시작" : "재개"}</>}
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => resetTimer()}>
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Preset buttons */}
+              <div className="flex justify-center gap-2">
+                {PRESETS.map(min => (
+                  <button
+                    key={min}
+                    onClick={() => resetTimer(min * 60)}
+                    className={cn(
+                      "rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                      timerTarget === min * 60
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    {min}분
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 강의 요약 카드 */}
+          <Card className="rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
+            <CardContent className="p-6 flex flex-col justify-center h-full">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+                  <Target className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">{result.oneLiner}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    개념 {result.concepts.length}개 · 시험 포인트 {result.examPoints.length}개
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 강의 흐름 */}
         <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
@@ -169,11 +337,8 @@ export default function ExamPage() {
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {result.flow.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-xl border border-border bg-secondary/30 p-4 transition-colors hover:border-primary/30"
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary mb-2">
+                <div key={index} className="rounded-xl border border-border bg-secondary/30 p-4 transition-colors hover:border-primary/30">
+                  <div className="mb-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
                     {index + 1}
                   </div>
                   <p className="text-sm text-foreground">{item}</p>
@@ -192,17 +357,12 @@ export default function ExamPage() {
                   <Brain className="h-5 w-5 text-primary" />
                   핵심 개념
                 </span>
-                <Badge variant="secondary" className="rounded-lg">
-                  {result.concepts.length}개
-                </Badge>
+                <Badge variant="secondary" className="rounded-lg">{result.concepts.length}개</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {result.concepts.map((concept, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 rounded-xl bg-secondary/30 p-3"
-                >
+                <div key={index} className="flex items-start gap-3 rounded-xl bg-secondary/30 p-3">
                   <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary mt-0.5">
                     {index + 1}
                   </div>
@@ -223,9 +383,7 @@ export default function ExamPage() {
                   <CheckSquare className="h-5 w-5 text-primary" />
                   복습 체크리스트
                 </span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  {completedCount}/{checklist.length}
-                </span>
+                <span className="text-sm font-normal text-muted-foreground">{completedCount}/{checklist.length}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -240,15 +398,10 @@ export default function ExamPage() {
                       item.completed ? "bg-green-500/5" : "bg-secondary/30 hover:bg-secondary/50"
                     )}
                   >
-                    {item.completed ? (
-                      <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-500" />
-                    ) : (
-                      <Circle className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                    )}
-                    <span className={cn(
-                      "text-sm",
-                      item.completed ? "text-green-700 line-through" : "text-foreground"
-                    )}>
+                    {item.completed
+                      ? <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-500" />
+                      : <Circle className="h-5 w-5 flex-shrink-0 text-muted-foreground" />}
+                    <span className={cn("text-sm", item.completed ? "text-green-700 line-through" : "text-foreground")}>
                       {item.task}
                     </span>
                   </button>
@@ -268,24 +421,17 @@ export default function ExamPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {result.examPoints.map((point, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
-              >
+              <div key={index} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm">
                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-destructive/10">
-                  <AlertTriangle className={cn(
-                    "h-6 w-6",
+                  <AlertTriangle className={cn("h-6 w-6",
                     index === 0 ? "text-destructive" : index === 1 ? "text-orange-500" : "text-primary"
                   )} />
                 </div>
                 <p className="flex-1 text-sm text-foreground">{point}</p>
                 <div className="text-right">
-                  <p className={cn(
-                    "text-lg font-bold",
+                  <p className={cn("text-lg font-bold",
                     index === 0 ? "text-destructive" : index === 1 ? "text-orange-500" : "text-primary"
-                  )}>
-                    {90 - index * 5}%
-                  </p>
+                  )}>{90 - index * 5}%</p>
                   <p className="text-xs text-muted-foreground">출제 확률</p>
                 </div>
               </div>
@@ -293,7 +439,7 @@ export default function ExamPage() {
           </CardContent>
         </Card>
 
-        {/* AI 도움 카드 */}
+        {/* AI 도움 */}
         <Card className="rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -307,8 +453,7 @@ export default function ExamPage() {
                 </p>
                 <div className="mt-4 flex gap-2">
                   <Button className="rounded-xl" onClick={() => router.push("/dashboard/chat")}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    AI에게 질문하기
+                    <BookOpen className="mr-2 h-4 w-4" />AI에게 질문하기
                   </Button>
                 </div>
               </div>
