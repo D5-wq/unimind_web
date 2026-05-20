@@ -1,8 +1,6 @@
 "use client"
 
-export const dynamic = 'force-dynamic'
-
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { supabase } from "@/lib/supabase"
@@ -53,7 +51,7 @@ const IMPORTANCE = (i: number) =>
   i <= 2  ? { label: "중요",      cls: "bg-orange-500/10 text-orange-600 border-orange-500/20" } :
              { label: "보통",      cls: "bg-secondary text-muted-foreground border-border" }
 
-export default function AnalysisPage() {
+function AnalysisContent() {
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
   const [result, setResult] = useState<AnalysisResult | null>(null)
@@ -367,5 +365,22 @@ export default function AnalysisPage() {
         </Tabs>
       </div>
     </div>
+  )
+}
+
+export default function AnalysisPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col">
+        <div className="flex flex-1 items-center justify-center p-6">
+          <div className="text-center text-muted-foreground">
+            <Sparkles className="mx-auto mb-4 h-12 w-12 animate-pulse text-primary" />
+            <p>불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <AnalysisContent />
+    </Suspense>
   )
 }
