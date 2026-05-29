@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Calendar, TrendingUp, Zap, Plus, X, Play, Pause, RotateCcw } from "lucide-react"
+import { useAnalysis } from "./analysis-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -30,38 +31,22 @@ function formatTime(secs: number): string {
 }
 
 export function RightPanel() {
+  const { selectedAnalysis, allAnalyses } = useAnalysis()
   const [exams, setExams] = useState<Exam[]>([])
   const [addingExam, setAddingExam] = useState(false)
   const [newSubject, setNewSubject] = useState("")
   const [newDate, setNewDate] = useState("")
-  const [recommendations, setRecommendations] = useState<string[]>([])
-  const [analysisCount, setAnalysisCount] = useState(0)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
+
+  const recommendations = selectedAnalysis?.examPoints?.slice(0, 3) ?? []
+  const analysisCount = allAnalyses.length
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("exams")
       if (saved) setExams(JSON.parse(saved))
     } catch {}
-
-    const keys = Object.keys(localStorage).filter(k => k.startsWith("analysis-"))
-    setAnalysisCount(keys.length)
-    if (keys.length > 0) {
-      keys.sort((a, b) => {
-        const ia = a.replace("analysis-", "")
-        const ib = b.replace("analysis-", "")
-        try {
-          const ma = JSON.parse(localStorage.getItem(`meta-${ia}`) ?? "{}")
-          const mb = JSON.parse(localStorage.getItem(`meta-${ib}`) ?? "{}")
-          return (mb.uploadedAt ?? 0) - (ma.uploadedAt ?? 0)
-        } catch { return 0 }
-      })
-      try {
-        const latest = JSON.parse(localStorage.getItem(keys[0]) ?? "")
-        setRecommendations((latest.examPoints ?? []).slice(0, 3))
-      } catch {}
-    }
 
     const saved = localStorage.getItem(`timer-${new Date().toDateString()}`)
     if (saved) setTimerSeconds(parseInt(saved))

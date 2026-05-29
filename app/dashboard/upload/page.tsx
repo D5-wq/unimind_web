@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
+import { useAnalysis } from "@/components/dashboard/analysis-context"
 import {
   Upload, FileText, Presentation, X, CheckCircle, Loader2, Sparkles, File, AlertCircle,
 } from "lucide-react"
@@ -61,6 +62,7 @@ export default function UploadPage() {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const router = useRouter()
+  const { reload, select } = useAnalysis()
 
   const analyzeFile = async (file: File, id: string) => {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "uploading", progress: 20 } : f))
@@ -87,7 +89,11 @@ export default function UploadPage() {
 
       // 결과를 localStorage에 저장 (supabaseId 키 우선)
       localStorage.setItem(`analysis-${storageId}`, JSON.stringify(result))
-      localStorage.setItem(`meta-${storageId}`, JSON.stringify({ name: file.name, uploadedAt: Date.now() }))
+      localStorage.setItem(`meta-${storageId}`, JSON.stringify({ fileName: file.name, name: file.name, uploadedAt: Date.now() }))
+
+      // 컨텍스트 갱신 및 새 강의 자동 선택
+      await reload()
+      select(storageId)
 
       // 알림 추가
       const prevNotifs = JSON.parse(localStorage.getItem("notifications") ?? "[]")

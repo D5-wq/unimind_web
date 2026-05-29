@@ -52,7 +52,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         const data = (() => { try { return JSON.parse(localStorage.getItem(k) ?? "{}") } catch { return {} } })()
         return {
           id,
-          fileName: meta.fileName ?? id,
+          fileName: meta.fileName ?? meta.name ?? id,
           oneLiner: data.oneLiner ?? "",
           createdAt: meta.uploadedAt ?? 0,
         }
