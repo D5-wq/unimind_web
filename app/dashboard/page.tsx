@@ -91,21 +91,21 @@ export default function DashboardPage() {
       }
     }
 
-    supabase.from('analyses').select('id, file_name, one_liner, concepts, exam_points, created_at')
-      .order('created_at', { ascending: false }).limit(10)
-      .then(({ data, error }) => {
-        if (error || !data || data.length === 0) { loadFromLocalStorage(); return }
-        const entries = data.map(row => ({
-          id: row.id, name: row.file_name,
-          uploadedAt: new Date(row.created_at).getTime(),
-          oneLiner: row.one_liner ?? '',
-          conceptCount: (row.concepts as any[])?.length ?? 0,
-          examPointCount: (row.exam_points as any[])?.length ?? 0,
-        }))
-        setAnalyses(entries)
-        if (data[0]?.exam_points) setRecommendations((data[0].exam_points as string[]).slice(0, 3))
-      })
-      .catch(() => loadFromLocalStorage())
+    Promise.resolve(
+      supabase.from('analyses').select('id, file_name, one_liner, concepts, exam_points, created_at')
+        .order('created_at', { ascending: false }).limit(10)
+    ).then(({ data, error }) => {
+      if (error || !data || data.length === 0) { loadFromLocalStorage(); return }
+      const entries = data.map(row => ({
+        id: row.id, name: row.file_name,
+        uploadedAt: new Date(row.created_at).getTime(),
+        oneLiner: row.one_liner ?? '',
+        conceptCount: (row.concepts as any[])?.length ?? 0,
+        examPointCount: (row.exam_points as any[])?.length ?? 0,
+      }))
+      setAnalyses(entries)
+      if (data[0]?.exam_points) setRecommendations((data[0].exam_points as string[]).slice(0, 3))
+    }).catch(() => loadFromLocalStorage())
   }, [])
 
   const upcomingExams = exams

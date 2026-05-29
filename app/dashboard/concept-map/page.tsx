@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Header } from "@/components/dashboard/header"
-import { ZoomIn, ZoomOut, Maximize2, Sparkles, Upload } from "lucide-react"
+import { ZoomIn, ZoomOut, Maximize2, Sparkles, Upload, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -28,8 +28,9 @@ interface Node {
   type: "main" | "flow" | "concept"; connections: string[]; detail?: string
 }
 
+const CX = 400, CY = 280
+
 function buildNodes(result: AnalysisResult): Node[] {
-  const CX = 400, CY = 280
   const flowR = 175, conceptR = 200
   const nodes: Node[] = []
 
@@ -44,7 +45,6 @@ function buildNodes(result: AnalysisResult): Node[] {
     detail: result.oneLiner,
   })
 
-  // Flow: upper arc (-150° to -30°)
   result.flow.forEach((item, i) => {
     const n = result.flow.length
     const angle = n === 1
@@ -61,7 +61,6 @@ function buildNodes(result: AnalysisResult): Node[] {
     })
   })
 
-  // Concepts: lower arc (30° to 150°)
   result.concepts.forEach((concept, i) => {
     const n = result.concepts.length
     const angle = n === 1
@@ -96,6 +95,12 @@ export default function ConceptMapPage() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [result, setResult] = useState<AnalysisResult | null>(null)
+
+  // Drag state
+  const draggingId = useRef<string | null>(null)
+  const dragStart = useRef<{ mx: number; my: number; nx: number; ny: number } | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+
   const router = useRouter()
 
   useEffect(() => {
@@ -115,19 +120,58 @@ export default function ConceptMapPage() {
       try { apply(JSON.parse(localStorage.getItem(keys[0]) ?? "")) } catch {}
     }
 
-    supabase.from('analyses').select('one_liner, flow, concepts, exam_points')
-      .order('created_at', { ascending: false }).limit(1).single()
-      .then(({ data }) => {
-        if (data) apply({
-          oneLiner: data.one_liner ?? '',
-          flow: data.flow as string[],
-          concepts: data.concepts as Concept[],
-          examPoints: data.exam_points as string[],
-        })
-        else loadFromLocalStorage()
+    Promise.resolve(
+      supabase.from('analyses').select('one_liner, flow, concepts, exam_points')
+        .order('created_at', { ascending: false }).limit(1).single()
+    ).then(({ data }) => {
+      if (data) apply({
+        oneLiner: data.one_liner ?? '',
+        flow: data.flow as string[],
+        concepts: data.concepts as Concept[],
+        examPoints: data.exam_points as string[],
       })
-      .catch(() => loadFromLocalStorage())
+      else loadFromLocalStorage()
+    }).catch(() => loadFromLocalStorage())
   }, [])
+
+  // SVG coordinate helper
+  const svgPoint = useCallback((clientX: number, clientY: number) => {
+    if (!svgRef.current) return { x: clientX, y: clientY }
+    const rect = svgRef.current.getBoundingClientRect()
+    return {
+      x: (clientX - rect.left) / zoom,
+      y: (clientY - rect.top) / zoom,
+    }
+  }, [zoom])
+
+  const handleNodePointerDown = (e: React.PointerEvent, node: Node) => {
+    e.stopPropagation()
+    draggingId.current = node.id
+    const pt = svgPoint(e.clientX, e.clientY)
+    dragStart.current = { mx: pt.x, my: pt.y, nx: node.x, ny: node.y }
+    ;(e.target as Element).setPointerCapture(e.pointerId)
+  }
+
+  const handleSvgPointerMove = (e: React.PointerEvent) => {
+    if (!draggingId.current || !dragStart.current) return
+    const pt = svgPoint(e.clientX, e.clientY)
+    const dx = pt.x - dragStart.current.mx
+    const dy = pt.y - dragStart.current.my
+    setNodes(prev => prev.map(n =>
+      n.id === draggingId.current
+        ? { ...n, x: dragStart.current!.nx + dx, y: dragStart.current!.ny + dy }
+        : n
+    ))
+  }
+
+  const handlePointerUp = () => {
+    draggingId.current = null
+    dragStart.current = null
+  }
+
+  const resetLayout = () => {
+    if (result) setNodes(buildNodes(result))
+  }
 
   if (!result) {
     return (
@@ -147,7 +191,6 @@ export default function ConceptMapPage() {
     )
   }
 
-  // Pre-compute deduplicated concept-concept edges
   const conceptEdges: { from: Node; to: Node; key: string }[] = []
   const drawnEdges = new Set<string>()
   nodes.filter(n => n.type === "concept").forEach(n => {
@@ -165,7 +208,7 @@ export default function ConceptMapPage() {
     <div className="flex flex-col">
       <Header title="개념 맵" subtitle="AI가 생성한 지식 그래프를 탐색하세요" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 md:p-6">
         <Card className="rounded-2xl border-border shadow-sm" style={{ height: 620 }}>
           <CardContent className="relative h-full p-0 overflow-hidden">
             {/* Zoom controls */}
@@ -182,6 +225,11 @@ export default function ConceptMapPage() {
                 onClick={() => setZoom(1)}>
                 <Maximize2 className="h-5 w-5" />
               </Button>
+              <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl bg-card shadow-md"
+                title="레이아웃 초기화"
+                onClick={resetLayout}>
+                <RotateCcw className="h-5 w-5" />
+              </Button>
             </div>
 
             {/* Legend */}
@@ -194,24 +242,21 @@ export default function ConceptMapPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-3.5 w-3.5 rounded-full bg-accent" />
-                  <span className="text-muted-foreground">강의 흐름 (순서 연결)</span>
+                  <span className="text-muted-foreground">강의 흐름</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-3.5 w-3.5 rounded-full bg-secondary border border-border" />
                   <span className="text-muted-foreground">핵심 개념</span>
                 </div>
-                {conceptEdges.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-0 w-3.5 border-t-2 border-dashed border-muted-foreground opacity-50" />
-                    <span className="text-muted-foreground">개념 연관성</span>
-                  </div>
-                )}
+                <div className="mt-1 flex items-center gap-2 text-muted-foreground/70">
+                  <span className="text-[10px]">✦ 드래그로 노드 이동 가능</span>
+                </div>
               </div>
             </div>
 
             {/* Selected node info */}
             {selectedNode && (
-              <div className="absolute bottom-4 right-4 z-10 w-72 rounded-xl bg-card/90 p-4 shadow-lg backdrop-blur-sm">
+              <div className="absolute bottom-4 right-4 z-10 w-64 md:w-72 rounded-xl bg-card/90 p-4 shadow-lg backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   <h4 className="font-semibold text-sm">{selectedNode.label}</h4>
@@ -244,8 +289,15 @@ export default function ConceptMapPage() {
               className="flex h-full items-center justify-center"
               style={{ transform: `scale(${zoom})`, transformOrigin: "center center" }}
             >
-              <svg width="800" height="560" viewBox="0 0 800 560" className="overflow-visible">
-                {/* Layer 1: main spokes (gray dashed) */}
+              <svg
+                ref={svgRef}
+                width="800" height="560" viewBox="0 0 800 560"
+                className="overflow-visible"
+                onPointerMove={handleSvgPointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+              >
+                {/* Layer 1: main spokes */}
                 {nodes.filter(n => n.type === "main").flatMap(n =>
                   n.connections.map(tid => {
                     const t = nodes.find(x => x.id === tid)
@@ -263,7 +315,7 @@ export default function ConceptMapPage() {
                   })
                 )}
 
-                {/* Layer 2: flow sequential (accent solid) */}
+                {/* Layer 2: flow sequential */}
                 {nodes.filter(n => n.type === "flow").flatMap(n =>
                   n.connections.map(tid => {
                     const t = nodes.find(x => x.id === tid)
@@ -280,7 +332,7 @@ export default function ConceptMapPage() {
                   })
                 )}
 
-                {/* Layer 3: concept relations (dashed, deduped) */}
+                {/* Layer 3: concept relations */}
                 {conceptEdges.map(({ from, to, key }) => {
                   const hi = selectedNode?.id === from.id || selectedNode?.id === to.id
                   return (
@@ -297,16 +349,29 @@ export default function ConceptMapPage() {
 
                 {/* Nodes */}
                 {nodes.map(node => (
-                  <foreignObject key={node.id} x={node.x - 70} y={node.y - 20} width="140" height="40" className="overflow-visible">
+                  <foreignObject
+                    key={node.id}
+                    x={node.x - 70} y={node.y - 20}
+                    width="140" height="40"
+                    className="overflow-visible"
+                    style={{ cursor: draggingId.current === node.id ? "grabbing" : "grab" }}
+                  >
                     <div className="flex items-center justify-center">
                       <button
-                        onClick={() => setSelectedNode(selectedNode?.id === node.id ? null : node)}
+                        onPointerDown={e => handleNodePointerDown(e, node)}
+                        onClick={() => {
+                          if (!draggingId.current) {
+                            setSelectedNode(selectedNode?.id === node.id ? null : node)
+                          }
+                        }}
                         className={cn(
-                          "cursor-pointer rounded-xl transition-all duration-200 hover:scale-105 whitespace-nowrap",
-                          selectedNode?.id === node.id ? "ring-2 ring-white ring-offset-1" : "",
-                          node.type === "main" ? "bg-primary text-primary-foreground shadow-lg px-5 py-2.5 text-sm font-bold" :
-                          node.type === "flow" ? "bg-accent text-accent-foreground shadow-md px-3 py-1.5 text-xs font-semibold" :
-                          "bg-secondary text-secondary-foreground border border-border px-3 py-1.5 text-xs font-medium"
+                          "cursor-grab active:cursor-grabbing rounded-xl transition-all duration-200 hover:scale-105 whitespace-nowrap select-none",
+                          selectedNode?.id === node.id ? "ring-2 ring-white ring-offset-1 scale-105" : "",
+                          node.type === "main"
+                            ? "bg-primary text-primary-foreground shadow-lg px-5 py-2.5 text-sm font-bold"
+                            : node.type === "flow"
+                            ? "bg-accent text-accent-foreground shadow-md px-3 py-1.5 text-xs font-semibold"
+                            : "bg-secondary text-secondary-foreground border border-border px-3 py-1.5 text-xs font-medium"
                         )}
                       >
                         {node.label}
