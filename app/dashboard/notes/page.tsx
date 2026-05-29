@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Header } from "@/components/dashboard/header"
 import { Plus, Trash2, Tag, Save, StickyNote, Bold, Italic, Underline, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,8 @@ export default function NotesPage() {
   const [tagInput, setTagInput] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const [saved, setSaved] = useState(true)
+  const [showList, setShowList] = useState(true)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     try {
@@ -53,6 +55,7 @@ export default function NotesPage() {
     setContent(note.content)
     setTags(note.tags)
     setSaved(true)
+    setShowList(false)
   }
 
   const createNote = () => {
@@ -84,6 +87,7 @@ export default function NotesPage() {
       setTitle("")
       setContent("")
       setTags([])
+      setShowList(true)
     }
   }
 
@@ -101,15 +105,53 @@ export default function NotesPage() {
     setSaved(false)
   }
 
-  const selectedNote = notes.find(n => n.id === selectedId)
+  // Apply markdown-style formatting around selected text
+  const applyFormat = (type: "bold" | "italic" | "underline" | "list") => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const selected = content.slice(start, end)
+
+    let before = "", after = ""
+    if (type === "bold") { before = "**"; after = "**" }
+    else if (type === "italic") { before = "_"; after = "_" }
+    else if (type === "underline") { before = "<u>"; after = "</u>" }
+    else if (type === "list") {
+      // Prefix each selected line with "- "
+      const lines = (selected || "새 항목").split("\n").map(l => `- ${l}`)
+      const replacement = lines.join("\n")
+      const next = content.slice(0, start) + replacement + content.slice(end)
+      setContent(next)
+      setSaved(false)
+      setTimeout(() => {
+        ta.focus()
+        ta.setSelectionRange(start, start + replacement.length)
+      }, 0)
+      return
+    }
+
+    const replacement = before + (selected || "텍스트") + after
+    const next = content.slice(0, start) + replacement + content.slice(end)
+    setContent(next)
+    setSaved(false)
+    setTimeout(() => {
+      ta.focus()
+      ta.setSelectionRange(start + before.length, start + before.length + (selected || "텍스트").length)
+    }, 0)
+  }
 
   return (
     <div className="flex flex-col">
       <Header title="학습 노트" subtitle="강의 내용을 나만의 언어로 정리하세요" />
       <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
 
-        {/* 노트 목록 */}
-        <div className="flex w-72 flex-shrink-0 flex-col border-r border-border bg-card">
+        {/* 노트 목록 — hidden on mobile when editor is open */}
+        <div className={cn(
+          "flex flex-col border-r border-border bg-card",
+          "w-full md:w-72 md:flex-shrink-0",
+          !showList && "hidden md:flex"
+        )}>
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h3 className="text-sm font-semibold text-foreground">노트 목록 ({notes.length})</h3>
             <Button size="sm" className="h-7 rounded-lg px-2" onClick={createNote}>
@@ -139,7 +181,7 @@ export default function NotesPage() {
                         {note.title || "제목 없음"}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {note.content || "내용 없음"}
+                        {note.content.replace(/[*_<>]/g, "") || "내용 없음"}
                       </p>
                       <p className="mt-1 text-[10px] text-muted-foreground/60">{timeAgo(note.updatedAt)}</p>
                     </div>
@@ -165,15 +207,46 @@ export default function NotesPage() {
 
         {/* 에디터 */}
         {selectedId ? (
-          <div className="flex flex-1 flex-col">
+          <div className={cn("flex flex-1 flex-col", showList && "hidden md:flex")}>
             {/* 툴바 */}
             <div className="flex items-center justify-between border-b border-border bg-card px-5 py-2">
               <div className="flex items-center gap-1">
-                {[Bold, Italic, Underline, List].map((Icon, i) => (
-                  <button key={i} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                    <Icon className="h-4 w-4" />
-                  </button>
-                ))}
+                {/* Mobile back button */}
+                <button
+                  className="mr-1 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+                  onClick={() => setShowList(true)}
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => applyFormat("bold")}
+                  title="굵게 (**text**)"
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Bold className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => applyFormat("italic")}
+                  title="기울임 (_text_)"
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Italic className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => applyFormat("underline")}
+                  title="밑줄 (<u>text</u>)"
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Underline className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => applyFormat("list")}
+                  title="목록 (- item)"
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <List className="h-4 w-4" />
+                </button>
+                <span className="ml-1 text-[10px] text-muted-foreground/50 hidden sm:block">텍스트 선택 후 클릭</span>
               </div>
               <Button
                 size="sm"
@@ -187,7 +260,7 @@ export default function NotesPage() {
             </div>
 
             {/* 노트 내용 */}
-            <div className="flex flex-1 flex-col overflow-y-auto p-6">
+            <div className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6">
               <Input
                 value={title}
                 onChange={e => { setTitle(e.target.value); setSaved(false) }}
@@ -195,15 +268,18 @@ export default function NotesPage() {
                 className="mb-4 border-0 bg-transparent px-0 text-2xl font-bold text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
               <textarea
+                ref={textareaRef}
                 value={content}
                 onChange={e => { setContent(e.target.value); setSaved(false) }}
-                placeholder="강의 내용을 자유롭게 정리해보세요...
+                placeholder={`강의 내용을 자유롭게 정리해보세요...
 
 예시:
-• 핵심 개념 정리
-• 이해가 안 되는 부분
-• 교수님 말씀 중 중요한 것"
-                className="flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
+- 핵심 개념 정리
+- 이해가 안 되는 부분
+- 교수님 말씀 중 중요한 것
+
+서식 버튼으로 **굵게**, _기울임_, <u>밑줄</u> 적용 가능`}
+                className="flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40 font-mono"
               />
             </div>
 

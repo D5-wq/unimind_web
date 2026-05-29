@@ -21,12 +21,23 @@ const INITIAL_MESSAGE: Message = {
   timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
 }
 
-const suggestedQuestions = [
+const DEFAULT_SUGGESTIONS = [
   "이 내용으로 예상 시험 문제 만들어줘",
   "핵심 개념을 쉽게 설명해줘",
   "강의 흐름을 한 번 더 정리해줘",
   "시험에 자주 나오는 내용이 뭐야?",
 ]
+
+function buildSuggestions(ctx: any): string[] {
+  if (!ctx?.concepts?.length) return DEFAULT_SUGGESTIONS
+  const concepts: { name: string }[] = ctx.concepts
+  const picks = concepts.slice(0, 2).map(c => `${c.name}을(를) 쉽게 설명해줘`)
+  return [
+    ...picks,
+    "이 내용으로 예상 시험 문제 만들어줘",
+    "이 강의에서 가장 중요한 개념이 뭐야?",
+  ]
+}
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE])
@@ -236,7 +247,7 @@ export default function ChatPage() {
           <div className="mx-auto max-w-3xl">
             <p className="mb-2 text-xs text-muted-foreground">추천 질문</p>
             <div className="flex flex-wrap gap-2">
-              {suggestedQuestions.map((question, index) => (
+              {buildSuggestions(analysisContext).map((question, index) => (
                 <button
                   key={index}
                   onClick={() => setInput(question)}
