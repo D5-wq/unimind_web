@@ -6,6 +6,7 @@ import { useAnalysis } from "./analysis-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { calcDDay } from "@/lib/utils-app"
 
 interface Exam {
   id: string
@@ -14,14 +15,6 @@ interface Exam {
 }
 
 const COLORS = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4"]
-
-function calcDDay(dateStr: string): number {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const exam = new Date(dateStr)
-  exam.setHours(0, 0, 0, 0)
-  return Math.ceil((exam.getTime() - today.getTime()) / 86400000)
-}
 
 function formatTime(secs: number): string {
   const h = Math.floor(secs / 3600).toString().padStart(2, "0")
