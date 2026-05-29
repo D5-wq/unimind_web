@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSidebar } from "./sidebar-context"
+import { LecturePicker } from "./lecture-picker"
 import { Bell, Search, Calendar as CalendarIcon, FileText, CheckCircle2, Trash2, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -101,6 +102,9 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* 강의 선택기 */}
+        <LecturePicker />
+
         {/* 검색 */}
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
