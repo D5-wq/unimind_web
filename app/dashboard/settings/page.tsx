@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/dashboard/header"
-import { User, Trash2, Key, Palette, Bell, ChevronRight } from "lucide-react"
+import { User, Trash2, Key } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function SettingsPage() {
   const [name, setName] = useState("")
@@ -30,17 +41,17 @@ export default function SettingsPage() {
   }
 
   const clearAllData = () => {
-    if (!confirm("저장된 모든 분석 데이터, 채팅 기록, 시험 일정이 삭제됩니다. 계속할까요?")) return
     const keysToRemove = Object.keys(localStorage).filter(k =>
       k.startsWith("analysis-") ||
       k.startsWith("meta-") ||
       k.startsWith("checklist-") ||
       k.startsWith("timer-") ||
-      k === "chat-messages" ||
-      k === "exams"
+      k.startsWith("chat-messages") ||
+      k === "exams" ||
+      k === "selected-analysis-id"
     )
     keysToRemove.forEach(k => localStorage.removeItem(k))
-    alert("데이터가 초기화됐어요.")
+    setAnalysisCount(0)
   }
 
   return (
@@ -121,14 +132,31 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground">{analysisCount}개</p>
               </div>
             </div>
-            <Button
-              variant="destructive"
-              className="w-full rounded-xl"
-              onClick={clearAllData}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              모든 데이터 초기화
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full rounded-xl">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  모든 데이터 초기화
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>데이터를 초기화할까요?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    저장된 모든 분석 데이터, 채팅 기록, 시험 일정이 삭제됩니다. 이 작업은 되돌릴 수 없어요.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={clearAllData}
+                  >
+                    초기화
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 

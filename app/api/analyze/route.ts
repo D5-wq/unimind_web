@@ -11,18 +11,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '텍스트 또는 파일명이 없어요' }, { status: 400 })
   }
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `당신은 대학 강의를 분석하는 AI 학습 어시스턴트입니다.
+  let response
+  try {
+    response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `당신은 대학 강의를 분석하는 AI 학습 어시스턴트입니다.
 학생이 실제로 '아하!'하고 이해할 수 있도록, 추상적이고 형식적인 표현 대신 개념 간의 연결과 실제 의미 중심으로 분석하세요.
 강의마다 고유한 내용과 흐름이 있으므로, 해당 강의의 특성에 맞게 구체적으로 분석하세요.`,
-      },
-      {
-        role: 'user',
-        content: `다음 강의 자료를 분석해주세요:\n\n${text}\n\n아래 JSON 형식만 반환하세요 (마크다운 코드블록 없이):
+        },
+        {
+          role: 'user',
+          content: `다음 강의 자료를 분석해주세요:\n\n${text}\n\n아래 JSON 형식만 반환하세요 (마크다운 코드블록 없이):
 {
   "oneLiner": "이 강의의 핵심 문제나 주제를 구체적으로 (예: 'CPU 스케줄링에서 fairness와 efficiency의 트레이드오프 해결법')",
   "summary": "강의 전체 흐름과 목적을 2문장으로. 무엇을 왜 배우는지, 어떤 문제를 해결하는지 포함.",
@@ -44,9 +46,13 @@ export async function POST(req: NextRequest) {
   ]
 }
 개념 4~7개, 강의흐름 4~6단계, 시험포인트 3~5개.`,
-      },
-    ],
-  })
+        },
+      ],
+    })
+  } catch (err: any) {
+    console.error('[OpenAI] 분석 실패:', err?.message)
+    return NextResponse.json({ error: 'AI 분석 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.' }, { status: 502 })
+  }
 
   const content = response.choices[0].message.content ?? ''
 

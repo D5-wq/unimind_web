@@ -100,7 +100,7 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col">
       <Header title="일정" subtitle="학습 일정을 달력에서 한눈에 확인하세요" />
-      <div className="flex flex-1 gap-6 p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 lg:flex-row">
 
         {/* 달력 */}
         <div className="flex-1">
@@ -178,7 +178,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 사이드 패널 */}
-        <div className="w-72 flex-shrink-0 space-y-4">
+        <div className="w-full space-y-4 lg:w-72 lg:flex-shrink-0">
           {selected ? (
             <>
               <Card className="rounded-2xl border-border shadow-sm">

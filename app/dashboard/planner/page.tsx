@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/dashboard/header"
-import { Target, Calendar, Plus, X, CheckCircle2, Circle, Sparkles, BookOpen, ChevronRight } from "lucide-react"
+import { Target, Calendar, Plus, X, CheckCircle2, Circle, Sparkles, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { calcDDay } from "@/lib/utils-app"
+import { useAnalysis } from "@/components/dashboard/analysis-context"
 
 interface Exam {
   id: string
@@ -21,14 +23,6 @@ interface WeekGoal {
   done: boolean
 }
 
-function calcDDay(dateStr: string): number {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const exam = new Date(dateStr)
-  exam.setHours(0, 0, 0, 0)
-  return Math.ceil((exam.getTime() - today.getTime()) / 86400000)
-}
-
 const DDAY_COLOR = (d: number) =>
   d === 0 ? "text-destructive bg-destructive/10" :
   d <= 3  ? "text-destructive bg-destructive/10" :
@@ -36,14 +30,16 @@ const DDAY_COLOR = (d: number) =>
             "text-primary bg-primary/10"
 
 export default function PlannerPage() {
+  const { selectedAnalysis } = useAnalysis()
   const [exams, setExams] = useState<Exam[]>([])
   const [goals, setGoals] = useState<WeekGoal[]>([])
-  const [recommendations, setRecommendations] = useState<string[]>([])
   const [addingGoal, setAddingGoal] = useState(false)
   const [newGoal, setNewGoal] = useState("")
   const [addingExam, setAddingExam] = useState(false)
   const [newSubject, setNewSubject] = useState("")
   const [newDate, setNewDate] = useState("")
+
+  const recommendations = selectedAnalysis?.examPoints?.slice(0, 4) ?? []
 
   useEffect(() => {
     try {
@@ -55,23 +51,6 @@ export default function PlannerPage() {
       const g = localStorage.getItem("planner-goals")
       if (g) setGoals(JSON.parse(g))
     } catch {}
-
-    // 최신 분석에서 시험 포인트 → 학습 추천
-    const keys = Object.keys(localStorage).filter(k => k.startsWith("analysis-"))
-    keys.sort((a, b) => {
-      const ia = a.replace("analysis-", ""); const ib = b.replace("analysis-", "")
-      try {
-        const ma = JSON.parse(localStorage.getItem(`meta-${ia}`) ?? "{}")
-        const mb = JSON.parse(localStorage.getItem(`meta-${ib}`) ?? "{}")
-        return (mb.uploadedAt ?? 0) - (ma.uploadedAt ?? 0)
-      } catch { return 0 }
-    })
-    if (keys.length > 0) {
-      try {
-        const latest = JSON.parse(localStorage.getItem(keys[0]) ?? "")
-        setRecommendations((latest.examPoints ?? []).slice(0, 4))
-      } catch {}
-    }
   }, [])
 
   const saveExams = (list: Exam[]) => {
