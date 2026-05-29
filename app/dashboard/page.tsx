@@ -5,12 +5,15 @@ import { Header } from "@/components/dashboard/header"
 import { supabase } from "@/lib/supabase"
 import {
   FileText, Play, TrendingUp, BookOpen, Brain, Target,
-  ArrowUpRight, Upload, Sparkles, Calendar, CheckCircle2, Zap,
+  ArrowUpRight, Upload, Sparkles, Calendar, CheckCircle2, Zap, CheckCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useAnalysis } from "@/components/dashboard/analysis-context"
+import { useRouter } from "next/navigation"
 
 interface AnalysisEntry {
   id: string; name: string; uploadedAt: number
@@ -38,74 +41,29 @@ function calcDDay(dateStr: string): number {
 }
 
 export default function DashboardPage() {
-  const [analyses, setAnalyses] = useState<AnalysisEntry[]>([])
+  const { selectedId, selectedAnalysis, select, allAnalyses } = useAnalysis()
+  const router = useRouter()
   const [exams, setExams] = useState<Exam[]>([])
-  const [recommendations, setRecommendations] = useState<string[]>([])
   const [courseCount, setCourseCount] = useState(0)
   const [userName, setUserName] = useState("안녕하세요!")
 
+  // 로컬 analyses 리스트 — context의 allAnalyses를 AnalysisEntry 형태로 변환
+  const analyses: AnalysisEntry[] = allAnalyses.map(a => ({
+    id: a.id,
+    name: a.fileName,
+    uploadedAt: a.createdAt,
+    oneLiner: a.oneLiner,
+    conceptCount: 0,
+    examPointCount: 0,
+  }))
+
+  // 선택된 강의의 추천 포인트
+  const recommendations = selectedAnalysis?.examPoints?.slice(0, 3) ?? []
+
   useEffect(() => {
-    // 사용자 이름
-    try {
-      const p = JSON.parse(localStorage.getItem("user-profile") ?? "{}")
-      if (p.name) setUserName(`${p.name}님!`)
-    } catch {}
-
-    // 강의 수
-    try {
-      const c = JSON.parse(localStorage.getItem("courses") ?? "[]")
-      setCourseCount(c.length)
-    } catch {}
-
-    // 시험 일정
-    try {
-      const e = JSON.parse(localStorage.getItem("exams") ?? "[]")
-      setExams(e)
-    } catch {}
-
-    // localStorage fallback
-    const loadFromLocalStorage = () => {
-      const entries: AnalysisEntry[] = []
-      for (const key of Object.keys(localStorage)) {
-        if (!key.startsWith("analysis-")) continue
-        const id = key.replace("analysis-", "")
-        try {
-          const result = JSON.parse(localStorage.getItem(key) ?? "")
-          const meta = JSON.parse(localStorage.getItem(`meta-${id}`) ?? "{}")
-          entries.push({
-            id, name: meta.name ?? "강의자료.pdf",
-            uploadedAt: meta.uploadedAt ?? Date.now(),
-            oneLiner: result.oneLiner ?? "",
-            conceptCount: result.concepts?.length ?? 0,
-            examPointCount: result.examPoints?.length ?? 0,
-          })
-        } catch {}
-      }
-      entries.sort((a, b) => b.uploadedAt - a.uploadedAt)
-      setAnalyses(entries)
-      if (entries.length > 0) {
-        try {
-          const latest = JSON.parse(localStorage.getItem(`analysis-${entries[0].id}`) ?? "")
-          setRecommendations((latest.examPoints ?? []).slice(0, 3))
-        } catch {}
-      }
-    }
-
-    Promise.resolve(
-      supabase.from('analyses').select('id, file_name, one_liner, concepts, exam_points, created_at')
-        .order('created_at', { ascending: false }).limit(10)
-    ).then(({ data, error }) => {
-      if (error || !data || data.length === 0) { loadFromLocalStorage(); return }
-      const entries = data.map(row => ({
-        id: row.id, name: row.file_name,
-        uploadedAt: new Date(row.created_at).getTime(),
-        oneLiner: row.one_liner ?? '',
-        conceptCount: (row.concepts as any[])?.length ?? 0,
-        examPointCount: (row.exam_points as any[])?.length ?? 0,
-      }))
-      setAnalyses(entries)
-      if (data[0]?.exam_points) setRecommendations((data[0].exam_points as string[]).slice(0, 3))
-    }).catch(() => loadFromLocalStorage())
+    try { const p = JSON.parse(localStorage.getItem("user-profile") ?? "{}"); if (p.name) setUserName(`${p.name}님!`) } catch {}
+    try { const c = JSON.parse(localStorage.getItem("courses") ?? "[]"); setCourseCount(c.length) } catch {}
+    try { const e = JSON.parse(localStorage.getItem("exams") ?? "[]"); setExams(e) } catch {}
   }, [])
 
   const upcomingExams = exams
@@ -118,7 +76,7 @@ export default function DashboardPage() {
 
   const stats = [
     { title: "분석한 강의", value: String(analyses.length), icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
-    { title: "이번 주 할 일", value: String(analyses.reduce((s, a) => s + a.examPointCount, 0)), icon: CheckCircle2, color: "text-accent", bg: "bg-accent/10" },
+    { title: "이번 주 할 일", value: String(selectedAnalysis?.examPoints?.length ?? 0), icon: CheckCircle2, color: "text-accent", bg: "bg-accent/10" },
     { title: "등록된 강의", value: String(courseCount), icon: TrendingUp, color: "text-chart-3", bg: "bg-chart-3/10" },
     {
       title: closestExam ? closestExam.subject : "D-Day",
@@ -129,10 +87,15 @@ export default function DashboardPage() {
     },
   ]
 
+  const handleSelectLecture = (entry: AnalysisEntry) => {
+    select(entry.id)
+    router.push(`/dashboard/analysis?id=${entry.id}`)
+  }
+
   return (
     <div className="flex flex-col">
       <Header title="대시보드" subtitle="학습 현황을 한눈에 확인하세요" />
-      <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-6 p-4 md:p-6">
 
         {/* 인사 배너 */}
         <div className="rounded-2xl bg-gradient-to-r from-primary to-primary/70 p-6 text-primary-foreground">
@@ -146,10 +109,10 @@ export default function DashboardPage() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {stats.map(stat => (
             <Card key={stat.title} className="rounded-2xl border-border shadow-sm">
-              <CardContent className="p-5">
+              <CardContent className="p-4 md:p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">{stat.title}</p>
@@ -177,8 +140,7 @@ export default function DashboardPage() {
                   <p className="mt-2 text-sm text-muted-foreground">PDF를 업로드하면 AI가 강의를 분석해줍니다</p>
                   <Link href="/dashboard/upload" className="mt-6">
                     <Button className="rounded-xl px-8">
-                      <Upload className="mr-2 h-4 w-4" />
-                      PDF 업로드하기
+                      <Upload className="mr-2 h-4 w-4" />PDF 업로드하기
                     </Button>
                   </Link>
                 </CardContent>
@@ -186,7 +148,7 @@ export default function DashboardPage() {
             ) : (
               <Card className="rounded-2xl border-border shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-base font-semibold">최근 분석한 강의</CardTitle>
+                  <CardTitle className="text-base font-semibold">강의 목록</CardTitle>
                   <Link href="/dashboard/upload">
                     <Button variant="ghost" size="sm" className="gap-1 rounded-xl text-primary text-xs">
                       업로드 <ArrowUpRight className="h-3.5 w-3.5" />
@@ -195,29 +157,47 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="max-h-[420px] overflow-y-auto space-y-2 pr-1">
-                  {analyses.map(entry => (
-                    <div key={entry.id} className="group flex items-center gap-3 rounded-xl bg-secondary/30 p-3 transition-colors hover:bg-secondary/50">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <FileText className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="truncate text-sm font-medium text-foreground">{entry.name}</h4>
-                          <span className="flex-shrink-0 text-xs text-muted-foreground">{timeAgo(entry.uploadedAt)}</span>
-                        </div>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{entry.oneLiner}</p>
-                        <div className="mt-0.5 flex gap-3">
-                          <span className="text-xs text-muted-foreground">개념 {entry.conceptCount}개</span>
-                          <span className="text-xs text-muted-foreground">시험포인트 {entry.examPointCount}개</span>
-                        </div>
-                      </div>
-                      <Link href={`/dashboard/analysis?id=${entry.id}`} className="opacity-0 transition-opacity group-hover:opacity-100">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  ))}
+                    {analyses.map(entry => {
+                      const isSelected = entry.id === selectedId
+                      return (
+                        <button
+                          key={entry.id}
+                          onClick={() => handleSelectLecture(entry)}
+                          className={cn(
+                            "group w-full flex items-center gap-3 rounded-xl p-3 text-left transition-all",
+                            isSelected
+                              ? "bg-primary/10 border border-primary/30"
+                              : "bg-secondary/30 hover:bg-secondary/50 border border-transparent"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl",
+                            isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10"
+                          )}>
+                            {isSelected
+                              ? <CheckCircle className="h-5 w-5" />
+                              : <FileText className="h-5 w-5 text-primary" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className={cn("truncate text-sm font-medium", isSelected ? "text-primary" : "text-foreground")}>
+                                {entry.name}
+                              </h4>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {isSelected && (
+                                  <Badge className="rounded-lg bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 border-primary/20">
+                                    선택됨
+                                  </Badge>
+                                )}
+                                <span className="text-xs text-muted-foreground">{timeAgo(entry.uploadedAt)}</span>
+                              </div>
+                            </div>
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">{entry.oneLiner}</p>
+                          </div>
+                          <Play className={cn("h-4 w-4 flex-shrink-0 transition-opacity", isSelected ? "text-primary opacity-100" : "opacity-0 group-hover:opacity-60")} />
+                        </button>
+                      )
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -226,7 +206,6 @@ export default function DashboardPage() {
 
           {/* 사이드: 이번 주 일정 + AI 추천 */}
           <div className="space-y-4">
-            {/* 이번 주 일정 */}
             <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -267,18 +246,17 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* AI 추천 */}
             <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Zap className="h-4 w-4 text-primary" />
-                  AI 추천
+                  {recommendations.length > 0 ? "선택 강의 시험 포인트" : "AI 추천"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {recommendations.length === 0 ? (
                   <div className="rounded-xl bg-secondary/30 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">강의를 업로드하면 AI가 학습 포인트를 추천해줍니다</p>
+                    <p className="text-xs text-muted-foreground">강의를 선택하면 시험 포인트를 보여줍니다</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -298,7 +276,7 @@ export default function DashboardPage() {
         {analyses.length > 0 && (
           <div className="grid gap-3 md:grid-cols-3">
             {[
-              { href: `/dashboard/analysis?id=${analyses[0]?.id ?? ''}`, icon: FileText, label: "분석 결과 보기", sub: "최근 강의 요약", color: "bg-primary/10", iconColor: "text-primary" },
+              { href: `/dashboard/analysis?id=${selectedId ?? analyses[0]?.id ?? ''}`, icon: FileText, label: "분석 결과 보기", sub: "선택한 강의 요약", color: "bg-primary/10", iconColor: "text-primary" },
               { href: "/dashboard/chat", icon: Sparkles, label: "AI에게 질문하기", sub: "강의 내용 질문", color: "bg-accent/10", iconColor: "text-accent" },
               { href: "/dashboard/exam", icon: Target, label: "시험 준비", sub: "예상 문제 확인", color: "bg-chart-3/10", iconColor: "text-chart-3" },
             ].map(item => (

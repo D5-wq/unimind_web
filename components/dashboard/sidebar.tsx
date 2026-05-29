@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Home, Upload, FileText, Network, MessageSquare, GraduationCap,
   Settings, Sparkles, Calendar, StickyNote, LayoutList, BookOpenCheck, X,
@@ -56,7 +56,7 @@ export function Sidebar() {
       open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
     )}>
       <div className="flex h-16 flex-shrink-0 items-center justify-between border-b border-border px-6">
-        <div className="flex items-center gap-3">
+        <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -64,7 +64,7 @@ export function Sidebar() {
             <h1 className="text-lg font-bold text-foreground">UniMind</h1>
             <p className="text-xs text-muted-foreground">AI 학습 어시스턴트</p>
           </div>
-        </div>
+        </Link>
         {/* Close button — mobile only */}
         <button
           className="rounded-lg p-1 text-muted-foreground hover:bg-secondary md:hidden"
