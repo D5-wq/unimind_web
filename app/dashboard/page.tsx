@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import {
   FileText, Play, TrendingUp, BookOpen, Brain, Target,
   ArrowUpRight, Upload, Sparkles, Calendar, CheckCircle2, Zap, CheckCircle, Flame, Crown,
+  RotateCcw, Network,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +18,7 @@ import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
 import { useRouter } from "next/navigation"
 import { getStreak, getStreakEmoji, isStreakAtRisk, type StreakData } from "@/lib/streak"
+import { getDueCards, getReviewSummary, type RepCard } from "@/lib/spaced-repetition"
 
 interface AnalysisEntry {
   id: string; name: string; uploadedAt: number
@@ -36,6 +38,8 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("안녕하세요!")
   const [streak, setStreak] = useState<StreakData | null>(null)
   const [upgraded, setUpgraded] = useState(false)
+  const [dueCards, setDueCards] = useState<RepCard[]>([])
+  const [reviewSummary, setReviewSummary] = useState({ total: 0, dueToday: 0, mastered: 0 })
 
   // 로컬 analyses 리스트 — context의 allAnalyses를 AnalysisEntry 형태로 변환
   const analyses: AnalysisEntry[] = allAnalyses.map(a => ({
@@ -55,6 +59,8 @@ export default function DashboardPage() {
     try { const c = JSON.parse(localStorage.getItem("courses") ?? "[]"); setCourseCount(c.length) } catch {}
     try { const e = JSON.parse(localStorage.getItem("exams") ?? "[]"); setExams(e) } catch {}
     try { setStreak(getStreak()) } catch {}
+    try { setDueCards(getDueCards().slice(0, 5)) } catch {}
+    try { setReviewSummary(getReviewSummary()) } catch {}
     // 결제 완료 후 리다이렉트
     const url = new URL(window.location.href)
     if (url.searchParams.get("upgraded") === "1") {
@@ -238,8 +244,47 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* 사이드: 이번 주 일정 + AI 추천 */}
+          {/* 사이드: 복습 + 일정 + AI 추천 */}
           <div className="space-y-4">
+
+            {/* 오늘 복습 카드 */}
+            {reviewSummary.total > 0 && (
+              <Card className="rounded-2xl border-border shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <RotateCcw className="h-4 w-4 text-primary" />
+                      오늘 복습할 개념
+                    </CardTitle>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${dueCards.length > 0 ? "bg-destructive/10 text-destructive" : "bg-green-500/10 text-green-600"}`}>
+                      {dueCards.length > 0 ? `${dueCards.length}개 대기` : "모두 완료 ✓"}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dueCards.length === 0 ? (
+                    <div className="rounded-xl bg-green-500/5 border border-green-500/20 p-3 text-center">
+                      <p className="text-xs text-green-600 font-medium">오늘 복습 완료!</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">총 {reviewSummary.mastered}개 개념 마스터</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {dueCards.map((card, i) => (
+                        <Link key={i} href={`/dashboard/analysis?id=${card.analysisId}`}>
+                          <div className="flex items-center gap-2 rounded-xl bg-secondary/30 hover:bg-secondary/60 p-2.5 transition-colors cursor-pointer">
+                            <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{card.conceptName}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{card.fileName.replace(/\.[^.]+$/, "")}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -308,11 +353,12 @@ export default function DashboardPage() {
 
         {/* 빠른 이동 */}
         {analyses.length > 0 && (
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             {[
               { href: `/dashboard/analysis?id=${selectedId ?? analyses[0]?.id ?? ''}`, icon: FileText, label: "분석 결과 보기", sub: "선택한 강의 요약", color: "bg-primary/10", iconColor: "text-primary" },
               { href: "/dashboard/chat", icon: Sparkles, label: "AI에게 질문하기", sub: "강의 내용 질문", color: "bg-accent/10", iconColor: "text-accent" },
               { href: `/dashboard/quiz?id=${selectedId ?? analyses[0]?.id ?? ''}`, icon: Target, label: "퀴즈 풀기", sub: "AI 자동 생성 문제", color: "bg-chart-3/10", iconColor: "text-chart-3" },
+              { href: "/dashboard/knowledge", icon: Network, label: "지식 그래프", sub: "누적 개념 시각화", color: "bg-accent/10", iconColor: "text-accent" },
             ].map(item => (
               <Link key={item.href} href={item.href} className="contents">
                 <Card className="cursor-pointer rounded-2xl border-border shadow-sm transition-all hover:border-primary/30 hover:shadow-md">

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   Home, Upload, FileText, Network, MessageSquare, GraduationCap,
   Settings, Sparkles, Calendar, StickyNote, LayoutList, BookOpenCheck, X,
-  Target, Crown, LogOut, LogIn, Flame,
+  Target, Crown, LogOut, LogIn, Flame, RotateCcw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
@@ -13,6 +13,7 @@ import { useSidebar } from "./sidebar-context"
 import { useAuth } from "./auth-context"
 import { getStreak, getStreakEmoji } from "@/lib/streak"
 import { FREE_ANALYSIS_LIMIT as FAL, getUsageCount as GUC } from "@/lib/stripe"
+import { getDueCards } from "@/lib/spaced-repetition"
 
 const navigation = [
   { name: "홈", href: "/dashboard", icon: Home, exact: true },
@@ -26,6 +27,7 @@ const navigation = [
   { name: "개념 맵", href: "/dashboard/concept-map", icon: Network },
   { name: "시험 준비", href: "/dashboard/exam", icon: BookOpenCheck },
   { name: "퀴즈", href: "/dashboard/quiz", icon: Target },
+  { name: "지식 그래프", href: "/dashboard/knowledge", icon: Network },
   { name: "요금제", href: "/dashboard/pricing", icon: Crown },
 ]
 
@@ -39,6 +41,7 @@ export function Sidebar() {
   const { user, signInWithGoogle, signOut, isPro } = useAuth()
   const [streak, setStreak] = useState({ current: 0, todayDone: false, lastActivityDate: null as string | null })
   const [usageCount, setUsageCount] = useState(0)
+  const [dueCount, setDueCount] = useState(0)
 
   useEffect(() => {
     try {
@@ -46,6 +49,7 @@ export function Sidebar() {
       setStreak({ current: s.current, todayDone: s.todayDone, lastActivityDate: s.lastActivityDate })
     } catch {}
     try { setUsageCount(GUC()) } catch {}
+    try { setDueCount(getDueCards().length) } catch {}
   }, [])
 
   useEffect(() => { close() }, [pathname])
@@ -125,7 +129,13 @@ export function Sidebar() {
               )}
             >
               <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {/* 복습 대기 뱃지 */}
+              {item.href === "/dashboard" && dueCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                  {dueCount > 9 ? "9+" : dueCount}
+                </span>
+              )}
             </Link>
           ))}
         </div>

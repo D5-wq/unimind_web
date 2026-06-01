@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
+import { scheduleReview, completeReview, getNextReview, REVIEW_INTERVALS } from "@/lib/spaced-repetition"
 import Link from "next/link"
 
 interface Concept {
@@ -188,8 +189,23 @@ function AnalysisContent() {
 
   const markUnderstanding = (conceptName: string, state: "understood" | "confused") => {
     setUnderstanding(prev => {
-      const next = prev[conceptName] === state ? { ...prev } : { ...prev, [conceptName]: state }
-      if (prev[conceptName] === state) delete next[conceptName]
+      const isToggleOff = prev[conceptName] === state
+      const next = { ...prev }
+      if (isToggleOff) {
+        delete next[conceptName]
+      } else {
+        next[conceptName] = state
+        // 이해했어요 → 망각곡선 스케줄 등록
+        if (id && result && state === "understood") {
+          const meta = (() => { try { return JSON.parse(localStorage.getItem(`meta-${id}`) ?? "{}") } catch { return {} } })()
+          const fileName = meta.fileName ?? meta.name ?? id
+          scheduleReview(id, conceptName, fileName)
+        }
+        // 헷갈려요 → 복습 인터벌 단축
+        if (id && state === "confused") {
+          completeReview(id, conceptName, false)
+        }
+      }
       if (id) localStorage.setItem(`concept-understanding-${id}`, JSON.stringify(next))
       return next
     })
@@ -523,6 +539,18 @@ function AnalysisContent() {
                           ))}
                         </div>
                       )}
+
+                      {/* 다음 복습 일정 */}
+                      {uState === "understood" && id && (() => {
+                        const next = getNextReview(id, concept.name)
+                        if (!next) return null
+                        const daysLeft = Math.ceil((new Date(next).getTime() - Date.now()) / 86400000)
+                        return (
+                          <div className="ml-9 mt-2 text-xs text-primary/70 flex items-center gap-1">
+                            🗓 다음 복습: {daysLeft <= 0 ? "오늘!" : `${daysLeft}일 후`} ({next})
+                          </div>
+                        )
+                      })()}
 
                       {/* 헷갈려요 선택 시 → AI에게 물어보기 */}
                       {uState === "confused" && (
