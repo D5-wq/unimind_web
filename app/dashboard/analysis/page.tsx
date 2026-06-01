@@ -17,7 +17,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
-import { scheduleReview, completeReview, getNextReview, REVIEW_INTERVALS } from "@/lib/spaced-repetition"
+import { useAuth } from "@/components/dashboard/auth-context"
+import { scheduleReview, completeReview, getNextReview } from "@/lib/spaced-repetition"
 import Link from "next/link"
 
 interface Concept {
@@ -113,6 +114,7 @@ function AnalysisContent() {
   const id = searchParams.get("id")
   const { selectedAnalysis: ctxAnalysis, allAnalyses } = useAnalysis()
 
+  const { user } = useAuth()
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [zoom, setZoom] = useState(1)
@@ -191,21 +193,42 @@ function AnalysisContent() {
     setUnderstanding(prev => {
       const isToggleOff = prev[conceptName] === state
       const next = { ...prev }
+      const meta = (() => { try { return JSON.parse(localStorage.getItem(`meta-${id}`) ?? "{}") } catch { return {} } })()
+      const fileName: string = meta.fileName ?? meta.name ?? id ?? ""
+
       if (isToggleOff) {
         delete next[conceptName]
+        // DB에서 삭제 (fire-and-forget)
+        if (id) {
+          fetch("/api/understanding", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ analysisId: id, conceptName, userId: user?.id ?? null }),
+          }).catch(() => {})
+        }
       } else {
         next[conceptName] = state
-        // 이해했어요 → 망각곡선 스케줄 등록
-        if (id && result && state === "understood") {
-          const meta = (() => { try { return JSON.parse(localStorage.getItem(`meta-${id}`) ?? "{}") } catch { return {} } })()
-          const fileName = meta.fileName ?? meta.name ?? id
-          scheduleReview(id, conceptName, fileName)
-        }
-        // 헷갈려요 → 복습 인터벌 단축
-        if (id && state === "confused") {
-          completeReview(id, conceptName, false)
+
+        // 망각곡선 스케줄링
+        if (id && state === "understood") scheduleReview(id, conceptName, fileName)
+        if (id && state === "confused") completeReview(id, conceptName, false)
+
+        // DB에 저장 (fire-and-forget — localStorage는 이미 저장됨)
+        if (id) {
+          fetch("/api/understanding", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              analysisId: id,
+              conceptName,
+              fileName,
+              status: state,
+              userId: user?.id ?? null,
+            }),
+          }).catch(() => {})
         }
       }
+
       if (id) localStorage.setItem(`concept-understanding-${id}`, JSON.stringify(next))
       return next
     })

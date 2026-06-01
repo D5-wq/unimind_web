@@ -7,10 +7,18 @@ import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { getStreak, getStreakEmoji } from "@/lib/streak"
 import { getReviewSummary } from "@/lib/spaced-repetition"
 import { getUsageCount, FREE_ANALYSIS_LIMIT } from "@/lib/stripe"
+import { supabase } from "@/lib/supabase"
 import {
   User, LogOut, Crown, Brain, Target, RotateCcw,
-  Flame, BookOpen, CheckCheck, TrendingUp, Share2, ExternalLink,
+  Flame, BookOpen, CheckCheck, TrendingUp, Share2, ExternalLink, AlertTriangle,
 } from "lucide-react"
+
+interface WeakConcept {
+  concept_name: string
+  confused_count: number
+  total_count: number
+  file_name: string | null
+}
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,11 +33,40 @@ export default function SettingsPage() {
   const [reviewSummary, setReviewSummary] = useState({ total: 0, dueToday: 0, mastered: 0 })
   const [usageCount, setUsageCount] = useState(0)
   const [understanding, setUnderstanding] = useState({ understood: 0, confused: 0, total: 0 })
+  const [weakConcepts, setWeakConcepts] = useState<WeakConcept[]>([])
 
   useEffect(() => {
     try { const s = getStreak(); setStreak({ current: s.current, longest: s.longest, totalQuizzes: s.totalQuizzes }) } catch {}
     try { setReviewSummary(getReviewSummary()) } catch {}
     try { setUsageCount(getUsageCount()) } catch {}
+
+    // DB에서 내 취약 개념 집계 (로그인 사용자만)
+    if (user?.id) {
+      supabase
+        .from("concept_understanding")
+        .select("concept_name, status, file_name")
+        .eq("user_id", user.id)
+        .then(({ data }) => {
+          if (!data) return
+          // concept별 집계
+          const map = new Map<string, WeakConcept>()
+          data.forEach(row => {
+            const key = row.concept_name
+            if (!map.has(key)) {
+              map.set(key, { concept_name: key, confused_count: 0, total_count: 0, file_name: row.file_name })
+            }
+            const entry = map.get(key)!
+            entry.total_count++
+            if (row.status === "confused") entry.confused_count++
+          })
+          const sorted = Array.from(map.values())
+            .filter(c => c.confused_count > 0)
+            .sort((a, b) => b.confused_count - a.confused_count)
+            .slice(0, 5)
+          setWeakConcepts(sorted)
+        })
+        .catch(() => {})
+    }
 
     // 전체 이해도 집계
     try {
@@ -233,6 +270,44 @@ export default function SettingsPage() {
                   미체크 {understanding.total - understanding.understood - understanding.confused}개
                 </span>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 취약 개념 Top 5 — DB 기반 */}
+        {weakConcepts.length > 0 && (
+          <Card className="rounded-2xl border-orange-500/20 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                내 취약 개념 Top {weakConcepts.length}
+                <span className="text-xs font-normal text-muted-foreground ml-1">헷갈려요 체크 기준</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {weakConcepts.map((c, i) => {
+                const confusedPct = Math.round((c.confused_count / c.total_count) * 100)
+                return (
+                  <div key={c.concept_name} className="flex items-center gap-3 rounded-xl bg-secondary/30 p-3">
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-xs font-bold text-orange-500">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{c.concept_name}</p>
+                      {c.file_name && (
+                        <p className="text-xs text-muted-foreground truncate">{c.file_name.replace(/\.[^.]+$/, "")}</p>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-sm font-bold text-orange-500">{confusedPct}%</p>
+                      <p className="text-xs text-muted-foreground">헷갈림</p>
+                    </div>
+                  </div>
+                )
+              })}
+              <p className="text-xs text-muted-foreground text-center pt-1">
+                이 개념들을 집중 복습해보세요
+              </p>
             </CardContent>
           </Card>
         )}
