@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { recordQuizComplete, getStreakEmoji } from "@/lib/streak"
+import { logEvent, EVENTS } from "@/lib/events"
 
 interface QuizQuestion {
   type: "ox" | "multiple"
@@ -81,6 +82,8 @@ function QuizContent() {
     setDone(false)
     setAnswers([])
 
+    logEvent(EVENTS.QUIZ_STARTED, { analysisId: id })
+
     try {
       const res = await fetch("/api/quiz", {
         method: "POST",
@@ -115,6 +118,7 @@ function QuizContent() {
     if (current + 1 >= questions.length) {
       const updatedStreak = recordQuizComplete()
       setStreakAfter(updatedStreak)
+      logEvent(EVENTS.QUIZ_COMPLETE, { score, total: questions.length, analysisId: id })
       setDone(true)
     } else {
       setCurrent(c => c + 1)

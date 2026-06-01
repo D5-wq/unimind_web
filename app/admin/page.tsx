@@ -15,7 +15,14 @@ interface KPI {
   totalUsers: number
   totalAnalyses: number
   avgAnalysesPerUser: number
-  retention7d: number  // 7일 재방문 사용자 수
+  retention7d: number
+}
+
+interface FunnelStep {
+  name: string
+  label: string
+  count: number
+  pct: number
 }
 
 interface ConceptRow { concept_name: string; count: number; course_name?: string | null }
@@ -29,6 +36,7 @@ export default function AdminPage() {
   const [verifying, setVerifying] = useState(false)
 
   const [kpi, setKpi] = useState<KPI | null>(null)
+  const [funnel, setFunnel] = useState<FunnelStep[]>([])
   const [hardest, setHardest] = useState<ConceptRow[]>([])
   const [topConcepts, setTopConcepts] = useState<ConceptRow[]>([])
   const [courses, setCourses] = useState<CourseRow[]>([])
@@ -155,6 +163,30 @@ export default function AdminPage() {
         )
       }
 
+      // ── 퍼널 ─────────────────────────────────────
+      const { data: eventData } = await supabase
+        .from("events")
+        .select("event_name")
+
+      if (eventData) {
+        const counts: Record<string, number> = {}
+        eventData.forEach(r => { counts[r.event_name] = (counts[r.event_name] ?? 0) + 1 })
+
+        const steps = [
+          { name: "pdf_uploaded",      label: "PDF 업로드" },
+          { name: "analysis_complete", label: "분석 완료" },
+          { name: "quiz_started",      label: "퀴즈 시작" },
+          { name: "quiz_complete",     label: "퀴즈 완료" },
+          { name: "share_link_copied", label: "공유 링크 복사" },
+        ]
+        const top = counts["pdf_uploaded"] ?? 1
+        setFunnel(steps.map(s => ({
+          ...s,
+          count: counts[s.name] ?? 0,
+          pct: Math.round(((counts[s.name] ?? 0) / top) * 100),
+        })))
+      }
+
       setLastFetched(new Date().toLocaleTimeString("ko-KR"))
     } catch (err) {
       console.error("[Admin]", err)
@@ -277,6 +309,58 @@ export default function AdminPage() {
               </p>
             </div>
           </>
+        )}
+
+        {/* ── 퍼널 ── */}
+        {funnel.length > 0 && funnel[0].count > 0 && (
+          <Card className="rounded-2xl border-border shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                사용자 퍼널
+                <span className="text-xs font-normal text-muted-foreground">PDF 업로드 기준 100%</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {funnel.map((step, i) => (
+                  <div key={step.name} className="flex items-center gap-4">
+                    <span className="w-24 text-xs text-muted-foreground flex-shrink-0">{step.label}</span>
+                    <div className="flex-1 h-7 rounded-lg bg-secondary overflow-hidden relative">
+                      <div
+                        className="h-full rounded-lg transition-all duration-500"
+                        style={{
+                          width: `${step.pct}%`,
+                          background: step.pct >= 80 ? "hsl(var(--primary))" :
+                                      step.pct >= 50 ? "hsl(var(--accent))" :
+                                      step.pct >= 30 ? "#f97316" : "hsl(var(--destructive))",
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center px-3 text-xs font-semibold text-white mix-blend-overlay">
+                        {step.count}명 ({step.pct}%)
+                      </span>
+                    </div>
+                    {i > 0 && funnel[i - 1].count > 0 && step.count < funnel[i - 1].count && (
+                      <span className="text-xs text-destructive flex-shrink-0 w-12 text-right">
+                        -{funnel[i - 1].count - step.count}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                {(() => {
+                  const upload = funnel[0]?.count ?? 0
+                  const complete = funnel[1]?.count ?? 0
+                  const quiz = funnel[3]?.count ?? 0
+                  if (upload === 0) return "아직 데이터 없음"
+                  if (complete / upload < 0.5) return "⚠️ 분석 완료율이 낮아요 — API 오류 점검 필요"
+                  if (quiz / Math.max(complete, 1) < 0.2) return "⚠️ 퀴즈 진입이 낮아요 — 퀴즈 CTA 강화 고려"
+                  return "✅ 퍼널이 건강해요"
+                })()}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid gap-6 lg:grid-cols-2">

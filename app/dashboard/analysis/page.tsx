@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
 import { scheduleReview, completeReview, getNextReview } from "@/lib/spaced-repetition"
+import { logEvent, EVENTS } from "@/lib/events"
 import Link from "next/link"
 
 interface Concept {
@@ -274,6 +275,7 @@ function AnalysisContent() {
     navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+    logEvent(EVENTS.SHARE_LINK_COPIED, { analysisId: id }, user?.id)
   }
 
   const toggleFlow = (i: number) =>

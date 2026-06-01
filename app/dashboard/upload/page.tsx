@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { getUsageCount, incrementUsage, FREE_ANALYSIS_LIMIT } from "@/lib/stripe"
+import { logEvent, EVENTS } from "@/lib/events"
 import Link from "next/link"
 
 async function extractTextFromFile(file: File): Promise<string> {
@@ -82,6 +83,7 @@ export default function UploadPage() {
     }
 
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "uploading", progress: 20 } : f))
+    logEvent(EVENTS.PDF_UPLOADED, { fileName: file.name, fileSize: file.size }, user?.id)
 
     try {
       const text = await extractTextFromFile(file)
@@ -96,8 +98,9 @@ export default function UploadPage() {
       const result = await res.json()
       const storageId = result.supabaseId ?? id
 
-      // 분석 성공 → 사용량 증가
+      // 분석 성공 → 사용량 증가 + 이벤트 기록
       incrementUsage()
+      logEvent(EVENTS.ANALYSIS_COMPLETE, { fileName: file.name, supabaseId: result.supabaseId }, user?.id)
 
       setFiles(prev => prev.map(f =>
         f.id === id ? { ...f, status: "complete", progress: 100, result, supabaseId: result.supabaseId } : f
