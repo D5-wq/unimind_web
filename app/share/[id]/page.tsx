@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 import Link from "next/link"
 import {
   Sparkles, FileText, Brain, Target, AlertTriangle,
-  ArrowRight, CheckCircle, BookOpen,
+  ArrowRight, BookOpen,
 } from "lucide-react"
 
 interface Concept {
@@ -22,10 +23,52 @@ async function getAnalysis(id: string) {
     .select("id, file_name, one_liner, summary, flow, concepts, exam_points, created_at")
     .eq("id", id)
     .single()
-
   if (error || !data) return null
   return data
 }
+
+// ── 동적 OG 태그 ──────────────────────────────────────────
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const data = await getAnalysis(id)
+
+  if (!data) {
+    return {
+      title: "UniMind — 강의를 찾을 수 없어요",
+    }
+  }
+
+  const concepts = (data.concepts ?? []) as Concept[]
+  const examPoints = (data.exam_points ?? []) as string[]
+  const description = `핵심 개념 ${concepts.length}개 · 시험 포인트 ${examPoints.length}개 | ${data.summary ?? data.one_liner}`
+
+  return {
+    title: `${data.one_liner} — UniMind`,
+    description,
+    openGraph: {
+      title: data.one_liner,
+      description,
+      siteName: "UniMind",
+      type: "article",
+      url: `https://unimind-web.vercel.app/share/${id}`,
+      images: [
+        {
+          url: `https://unimind-web.vercel.app/og-default.png`,
+          width: 1200,
+          height: 630,
+          alt: data.one_liner,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data.one_liner,
+      description,
+      images: [`https://unimind-web.vercel.app/og-default.png`],
+    },
+  }
+}
+// ──────────────────────────────────────────────────────────
 
 const DIFF_CLS = (d?: string) =>
   d === "심화" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
@@ -35,11 +78,10 @@ const DIFF_CLS = (d?: string) =>
 export default async function SharePage({ params }: PageProps) {
   const { id } = await params
   const data = await getAnalysis(id)
-
   if (!data) notFound()
 
   const concepts = (data.concepts ?? []) as Concept[]
-  const flow = (data.flow ?? []) as string[]
+  const flow     = (data.flow ?? []) as string[]
   const examPoints = (data.exam_points ?? []) as string[]
 
   return (
@@ -76,16 +118,10 @@ export default async function SharePage({ params }: PageProps) {
               {data.summary && (
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{data.summary}</p>
               )}
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Brain className="h-3.5 w-3.5 text-primary" /> 개념 {concepts.length}개
-                </span>
-                <span className="flex items-center gap-1">
-                  <Target className="h-3.5 w-3.5 text-destructive" /> 시험 포인트 {examPoints.length}개
-                </span>
-                <span className="flex items-center gap-1">
-                  <BookOpen className="h-3.5 w-3.5 text-accent" /> 흐름 {flow.length}단계
-                </span>
+              <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Brain className="h-3.5 w-3.5 text-primary" /> 개념 {concepts.length}개</span>
+                <span className="flex items-center gap-1"><Target className="h-3.5 w-3.5 text-destructive" /> 시험 포인트 {examPoints.length}개</span>
+                <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-accent" /> 흐름 {flow.length}단계</span>
               </div>
             </div>
           </div>
@@ -95,15 +131,12 @@ export default async function SharePage({ params }: PageProps) {
         {flow.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 font-semibold text-foreground mb-4">
-              <BookOpen className="h-4 w-4 text-primary" />
-              강의 흐름
+              <BookOpen className="h-4 w-4 text-primary" /> 강의 흐름
             </h2>
             <div className="space-y-2">
               {flow.map((step, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary mt-0.5">
-                    {i + 1}
-                  </div>
+                  <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary mt-0.5">{i + 1}</div>
                   <p className="text-sm text-foreground leading-relaxed">{step}</p>
                 </div>
               ))}
@@ -115,21 +148,16 @@ export default async function SharePage({ params }: PageProps) {
         {concepts.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 font-semibold text-foreground mb-4">
-              <Brain className="h-4 w-4 text-primary" />
-              핵심 개념 {concepts.length}개
+              <Brain className="h-4 w-4 text-primary" /> 핵심 개념 {concepts.length}개
             </h2>
             <div className="space-y-3">
               {concepts.map((concept, i) => (
                 <div key={i} className="rounded-xl bg-secondary/30 p-4">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                      {i + 1}
-                    </span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{i + 1}</span>
                     <span className="font-medium text-foreground text-sm">{concept.name}</span>
                     {concept.difficulty && (
-                      <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${DIFF_CLS(concept.difficulty)}`}>
-                        {concept.difficulty}
-                      </span>
+                      <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${DIFF_CLS(concept.difficulty)}`}>{concept.difficulty}</span>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed ml-7">{concept.simple}</p>
@@ -143,8 +171,7 @@ export default async function SharePage({ params }: PageProps) {
         {examPoints.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 font-semibold text-foreground mb-4">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              예상 시험 포인트
+              <AlertTriangle className="h-4 w-4 text-destructive" /> 예상 시험 포인트
             </h2>
             <div className="space-y-2">
               {examPoints.map((point, i) => (
@@ -152,9 +179,7 @@ export default async function SharePage({ params }: PageProps) {
                   <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5 ${
                     i === 0 ? "bg-destructive/10 text-destructive" :
                     i === 1 ? "bg-orange-500/10 text-orange-500" : "bg-primary/10 text-primary"
-                  }`}>
-                    {i + 1}
-                  </div>
+                  }`}>{i + 1}</div>
                   <p className="text-sm text-foreground leading-relaxed">{point}</p>
                 </div>
               ))}
@@ -162,7 +187,7 @@ export default async function SharePage({ params }: PageProps) {
           </div>
         )}
 
-        {/* CTA 카드 */}
+        {/* CTA */}
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-6 text-center">
           <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary mb-4">
             <Sparkles className="h-7 w-7 text-primary-foreground" />
@@ -186,8 +211,7 @@ export default async function SharePage({ params }: PageProps) {
             </Link>
             <Link href="/dashboard">
               <button className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
-                먼저 둘러보기
-                <ArrowRight className="h-3.5 w-3.5" />
+                먼저 둘러보기 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </Link>
           </div>
@@ -198,4 +222,4 @@ export default async function SharePage({ params }: PageProps) {
   )
 }
 
-export const revalidate = 3600 // 1시간 캐시
+export const revalidate = 3600

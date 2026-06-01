@@ -7,9 +7,21 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'StudyMate AI - AI 학습 도우미',
-  description: 'AI 기반 대학 학습 보조 대시보드',
-  generator: 'v0.app',
+  title: 'UniMind — AI 강의 학습 어시스턴트',
+  description: 'PDF·PPTX 업로드 한 번으로 핵심 개념 정리, 퀴즈 자동 생성, AI 질문까지. 대학생을 위한 AI 학습 도우미.',
+  metadataBase: new URL('https://unimind-web.vercel.app'),
+  openGraph: {
+    title: 'UniMind — AI 강의 학습 어시스턴트',
+    description: 'PDF·PPTX 업로드 한 번으로 핵심 개념 정리, 퀴즈 자동 생성, AI 질문까지.',
+    siteName: 'UniMind',
+    type: 'website',
+    url: 'https://unimind-web.vercel.app',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'UniMind — AI 강의 학습 어시스턴트',
+    description: 'PDF·PPTX 업로드 한 번으로 핵심 개념 정리, 퀴즈 자동 생성, AI 질문까지.',
+  },
   icons: {
     icon: [
       {
