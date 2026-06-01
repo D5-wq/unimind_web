@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yunjaehwang@gmail.com"
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "unimind2026"
 
 interface Stats {
   totalUsers: number
@@ -39,6 +40,10 @@ export default function AdminPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
+  const [authed, setAuthed] = useState(false)
+  const [pwInput, setPwInput] = useState("")
+  const [pwError, setPwError] = useState(false)
+
   const [stats, setStats] = useState<Stats | null>(null)
   const [hardestConcepts, setHardestConcepts] = useState<ConceptRow[]>([])
   const [topConcepts, setTopConcepts] = useState<ConceptRow[]>([])
@@ -46,13 +51,22 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(false)
   const [lastFetched, setLastFetched] = useState<string | null>(null)
 
-  // 관리자 인증 체크
+  // 세션에 인증 상태 저장
   useEffect(() => {
-    if (loading) return
-    if (!user) { router.push("/"); return }
-    if (user.email !== ADMIN_EMAIL) { router.push("/dashboard"); return }
-    fetchStats()
-  }, [user, loading])
+    const saved = sessionStorage.getItem("admin-authed")
+    if (saved === "1") { setAuthed(true); fetchStats() }
+  }, [])
+
+  const handleLogin = () => {
+    if (pwInput === ADMIN_PASSWORD) {
+      sessionStorage.setItem("admin-authed", "1")
+      setAuthed(true)
+      fetchStats()
+    } else {
+      setPwError(true)
+      setTimeout(() => setPwError(false), 2000)
+    }
+  }
 
   const fetchStats = async () => {
     setFetching(true)
@@ -161,15 +175,39 @@ export default function AdminPage() {
     }
   }
 
-  if (loading || !user) {
+  if (!authed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Sparkles className="h-8 w-8 animate-pulse text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary mb-4">
+              <BarChart3 className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">UniMind 관리자</h1>
+            <p className="text-sm text-muted-foreground mt-1">비밀번호를 입력하세요</p>
+          </div>
+          <div className="space-y-3">
+            <input
+              type="password"
+              value={pwInput}
+              onChange={e => setPwInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              placeholder="관리자 비밀번호"
+              className={`w-full rounded-xl border px-4 py-3 text-sm bg-card text-foreground outline-none transition-colors ${pwError ? "border-destructive" : "border-border focus:border-primary"}`}
+              autoFocus
+            />
+            {pwError && <p className="text-xs text-destructive text-center">비밀번호가 틀렸어요</p>}
+            <button
+              onClick={handleLogin}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              입장
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
-
-  if (user.email !== ADMIN_EMAIL) return null
 
   return (
     <div className="min-h-screen bg-background p-6">
