@@ -4,13 +4,17 @@ import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
+import { useAuth } from "@/components/dashboard/auth-context"
 import {
   Upload, FileText, Presentation, X, CheckCircle, Loader2, Sparkles, File, AlertCircle,
+  Crown, Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { getUsageCount, incrementUsage, FREE_ANALYSIS_LIMIT } from "@/lib/stripe"
+import Link from "next/link"
 
 async function extractTextFromFile(file: File): Promise<string> {
   if (file.name.toLowerCase().endsWith('.pptx')) {
@@ -61,16 +65,26 @@ function formatFileSize(bytes: number): string {
 export default function UploadPage() {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
+  const [showLimit, setShowLimit] = useState(false)
   const router = useRouter()
   const { reload, select } = useAnalysis()
+  const { isPro } = useAuth()
+
+  const usageCount = getUsageCount()
+  const isLimitReached = !isPro && usageCount >= FREE_ANALYSIS_LIMIT
 
   const analyzeFile = async (file: File, id: string) => {
+    // Pro가 아닐 때 한도 체크
+    if (!isPro && getUsageCount() >= FREE_ANALYSIS_LIMIT) {
+      setShowLimit(true)
+      setFiles(prev => prev.filter(f => f.id !== id))
+      return
+    }
+
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "uploading", progress: 20 } : f))
 
     try {
-      // 브라우저에서 텍스트 추출 (파일 바이너리 전송 없음)
       const text = await extractTextFromFile(file)
-
       setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "analyzing", progress: 60 } : f))
 
       const res = await fetch("/api/analyze", {
@@ -82,20 +96,19 @@ export default function UploadPage() {
       const result = await res.json()
       const storageId = result.supabaseId ?? id
 
-      // 완료
+      // 분석 성공 → 사용량 증가
+      incrementUsage()
+
       setFiles(prev => prev.map(f =>
         f.id === id ? { ...f, status: "complete", progress: 100, result, supabaseId: result.supabaseId } : f
       ))
 
-      // 결과를 localStorage에 저장 (supabaseId 키 우선)
       localStorage.setItem(`analysis-${storageId}`, JSON.stringify(result))
       localStorage.setItem(`meta-${storageId}`, JSON.stringify({ fileName: file.name, name: file.name, uploadedAt: Date.now() }))
 
-      // 컨텍스트 갱신 및 새 강의 자동 선택
       await reload()
       select(storageId)
 
-      // 알림 추가
       const prevNotifs = JSON.parse(localStorage.getItem("notifications") ?? "[]")
       prevNotifs.unshift({
         id: `notif-${storageId}`,
@@ -113,6 +126,8 @@ export default function UploadPage() {
   }
 
   const handleFiles = (fileList: FileList) => {
+    if (isLimitReached) { setShowLimit(true); return }
+
     const newFiles: UploadedFile[] = Array.from(fileList).map((file, index) => ({
       id: `${Date.now()}-${index}`,
       name: file.name,
@@ -122,43 +137,35 @@ export default function UploadPage() {
     }))
 
     setFiles(prev => [...newFiles, ...prev])
-
-    // 각 파일 실제 분석 시작
     Array.from(fileList).forEach((file, index) => {
       analyzeFile(file, newFiles[index].id)
     })
   }
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
+    e.preventDefault(); setIsDragging(true)
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault(); setIsDragging(false)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    handleFiles(e.dataTransfer.files)
-  }, [])
+    e.preventDefault(); setIsDragging(false); handleFiles(e.dataTransfer.files)
+  }, [isLimitReached])
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) handleFiles(e.target.files)
   }
 
-  const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id))
-  }
+  const removeFile = (id: string) => setFiles(prev => prev.filter(f => f.id !== id))
 
   const getStatusIcon = (status: UploadedFile["status"]) => {
     switch (status) {
       case "uploading": return <Loader2 className="h-5 w-5 animate-spin text-primary" />
       case "analyzing": return <Sparkles className="h-5 w-5 animate-pulse text-accent" />
-      case "complete": return <CheckCircle className="h-5 w-5 text-green-500" />
-      case "error": return <AlertCircle className="h-5 w-5 text-destructive" />
+      case "complete":  return <CheckCircle className="h-5 w-5 text-green-500" />
+      case "error":     return <AlertCircle className="h-5 w-5 text-destructive" />
     }
   }
 
@@ -166,8 +173,8 @@ export default function UploadPage() {
     switch (status) {
       case "uploading": return "업로드 중..."
       case "analyzing": return "AI 분석 중..."
-      case "complete": return "분석 완료"
-      case "error": return "오류 발생"
+      case "complete":  return "분석 완료"
+      case "error":     return "오류 발생"
     }
   }
 
@@ -176,8 +183,84 @@ export default function UploadPage() {
       <Header title="강의 자료 업로드" subtitle="PDF 또는 PPTX를 업로드하고 AI 분석을 시작하세요" />
 
       <div className="flex-1 space-y-6 p-6">
+
+        {/* 사용량 표시 (무료 유저만) */}
+        {!isPro && (
+          <div className={cn(
+            "flex items-center justify-between rounded-2xl border px-4 py-3",
+            isLimitReached
+              ? "border-destructive/30 bg-destructive/5"
+              : usageCount >= FREE_ANALYSIS_LIMIT - 1
+              ? "border-orange-500/30 bg-orange-500/5"
+              : "border-border bg-secondary/30"
+          )}>
+            <div className="flex items-center gap-3">
+              {isLimitReached
+                ? <Lock className="h-4 w-4 text-destructive" />
+                : <FileText className="h-4 w-4 text-muted-foreground" />}
+              <div>
+                <p className={cn("text-sm font-medium", isLimitReached ? "text-destructive" : "text-foreground")}>
+                  이번 달 분석 {usageCount} / {FREE_ANALYSIS_LIMIT}회 사용
+                </p>
+                {isLimitReached && (
+                  <p className="text-xs text-destructive/80">한도에 도달했어요. Pro로 업그레이드하면 무제한 분석 가능해요.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-1.5">
+                {Array.from({ length: FREE_ANALYSIS_LIMIT }).map((_, i) => (
+                  <div key={i} className={cn(
+                    "h-2 w-5 rounded-full transition-colors",
+                    i < usageCount
+                      ? isLimitReached ? "bg-destructive" : "bg-primary"
+                      : "bg-secondary border border-border"
+                  )} />
+                ))}
+              </div>
+              {isLimitReached && (
+                <Link href="/dashboard/pricing">
+                  <Button size="sm" className="rounded-xl gap-1.5 flex-shrink-0">
+                    <Crown className="h-3.5 w-3.5" />
+                    Pro 업그레이드
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 한도 초과 모달 */}
+        {showLimit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowLimit(false)}>
+            <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl mx-4" onClick={e => e.stopPropagation()}>
+              <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-destructive/10 mb-4">
+                <Lock className="h-8 w-8 text-destructive" />
+              </div>
+              <h2 className="text-xl font-bold text-center text-foreground mb-2">이번 달 한도 초과</h2>
+              <p className="text-sm text-center text-muted-foreground mb-6">
+                무료 플랜은 월 {FREE_ANALYSIS_LIMIT}회 분석까지 가능해요.<br />
+                Pro로 업그레이드하면 무제한으로 분석할 수 있어요.
+              </p>
+              <div className="space-y-2">
+                <Link href="/dashboard/pricing" className="block">
+                  <Button className="w-full rounded-xl gap-2">
+                    <Crown className="h-4 w-4" />
+                    Pro로 업그레이드 (월 4,900원)
+                  </Button>
+                </Link>
+                <Button variant="ghost" className="w-full rounded-xl" onClick={() => setShowLimit(false)}>
+                  다음 달에 쓸게요
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 업로드 드롭존 */}
         <Card className={cn(
           "rounded-2xl border-2 border-dashed transition-all duration-300",
+          isLimitReached ? "border-border opacity-50 pointer-events-none" :
           isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
         )}>
           <CardContent className="p-0">
@@ -191,26 +274,36 @@ export default function UploadPage() {
                 "mb-6 rounded-2xl p-6 transition-all duration-300",
                 isDragging ? "bg-primary/10 scale-110" : "bg-secondary/50"
               )}>
-                <Upload className={cn("h-12 w-12 transition-colors", isDragging ? "text-primary" : "text-muted-foreground")} />
+                {isLimitReached
+                  ? <Lock className="h-12 w-12 text-muted-foreground" />
+                  : <Upload className={cn("h-12 w-12 transition-colors", isDragging ? "text-primary" : "text-muted-foreground")} />}
               </div>
-              <h3 className="mb-2 text-xl font-semibold">강의 자료를 드래그하여 업로드</h3>
-              <p className="mb-6 text-sm text-muted-foreground">PDF 또는 PPTX 파일을 선택하세요 (최대 50MB)</p>
-              <label>
-                <input
-                  type="file"
-                  accept=".pdf,.pptx"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileInput}
-                />
-                <Button className="rounded-xl px-8" asChild>
-                  <span><File className="mr-2 h-4 w-4" />파일 선택</span>
-                </Button>
-              </label>
+              <h3 className="mb-2 text-xl font-semibold">
+                {isLimitReached ? "이번 달 한도에 도달했어요" : "강의 자료를 드래그하여 업로드"}
+              </h3>
+              <p className="mb-6 text-sm text-muted-foreground">
+                {isLimitReached ? "Pro로 업그레이드하면 무제한 분석 가능해요" : "PDF 또는 PPTX 파일을 선택하세요 (최대 50MB)"}
+              </p>
+              {isLimitReached ? (
+                <Link href="/dashboard/pricing">
+                  <Button className="rounded-xl px-8 gap-2">
+                    <Crown className="h-4 w-4" />
+                    Pro 업그레이드
+                  </Button>
+                </Link>
+              ) : (
+                <label>
+                  <input type="file" accept=".pdf,.pptx" multiple className="hidden" onChange={handleFileInput} />
+                  <Button className="rounded-xl px-8" asChild>
+                    <span><File className="mr-2 h-4 w-4" />파일 선택</span>
+                  </Button>
+                </label>
+              )}
             </div>
           </CardContent>
         </Card>
 
+        {/* 파일 목록 */}
         {files.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">업로드된 파일 ({files.length})</h3>
@@ -264,22 +357,18 @@ export default function UploadPage() {
 
                     {file.status === "complete" && file.result && (
                       <div className="mt-4 space-y-3">
-                        {/* 한 줄 요약 미리보기 */}
                         <div className="rounded-xl bg-primary/5 p-3">
                           <p className="text-sm font-medium text-primary">✨ {file.result.oneLiner}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
-                            size="sm"
-                            className="rounded-lg"
+                            size="sm" className="rounded-lg"
                             onClick={() => router.push(`/dashboard/analysis?id=${file.supabaseId ?? file.id}`)}
                           >
                             분석 결과 보기
                           </Button>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-lg"
+                            variant="outline" size="sm" className="rounded-lg"
                             onClick={() => router.push(`/dashboard/chat`)}
                           >
                             AI에게 질문하기

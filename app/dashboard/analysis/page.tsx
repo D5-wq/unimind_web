@@ -226,7 +226,10 @@ function AnalysisContent() {
   }
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href)
+    const shareUrl = id
+      ? `${window.location.origin}/share/${id}`
+      : window.location.href
+    navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
