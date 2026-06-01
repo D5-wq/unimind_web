@@ -215,12 +215,15 @@ function AnalysisContent() {
 
         // DB에 저장 (fire-and-forget — localStorage는 이미 저장됨)
         if (id) {
+          // 파일명에서 과목명 추출 (확장자 제거)
+          const courseName = fileName.replace(/\.[^.]+$/, "").trim() || null
           fetch("/api/understanding", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               analysisId: id,
               conceptName,
+              courseName,
               fileName,
               status: state,
               userId: user?.id ?? null,

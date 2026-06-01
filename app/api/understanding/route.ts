@@ -3,30 +3,32 @@ import { supabase } from '@/lib/supabase'
 
 /**
  * POST /api/understanding
- * 개념 이해 체크 데이터를 Supabase에 upsert
+ * Body: { analysisId, conceptName, courseName?, fileName?, status, userId? }
  *
- * Body: { analysisId, conceptName, fileName, status, userId? }
+ * status: 'understood' | 'confused' | 'review_needed'
+ * course_name: 과목 단위 분석용 (예: "운영체제", "자료구조")
  *
  * 이 데이터가 쌓이면:
- * SELECT concept_name, COUNT(*) FILTER (WHERE status='confused') AS confused
- * FROM concept_understanding GROUP BY concept_name ORDER BY confused DESC
- * → "어떤 개념에서 사람들이 가장 많이 막히는가?" 분석 가능
+ * - 어떤 개념에서 사람들이 가장 막히는가?
+ * - 어떤 과목이 가장 어려운가?
+ * - 어떤 개념이 여러 과목에 반복되는가?
  */
 export async function POST(req: NextRequest) {
-  const { analysisId, conceptName, fileName, status, userId } = await req.json()
+  const { analysisId, conceptName, courseName, fileName, status, userId } = await req.json()
 
   if (!analysisId || !conceptName || !status) {
     return NextResponse.json({ error: '필수 파라미터 누락' }, { status: 400 })
   }
 
-  if (!['understood', 'confused'].includes(status)) {
+  const validStatuses = ['understood', 'confused', 'review_needed']
+  if (!validStatuses.includes(status)) {
     return NextResponse.json({ error: '유효하지 않은 status' }, { status: 400 })
   }
 
-  // upsert: 같은 (user_id, analysis_id, concept_name) 조합이면 status 업데이트
   const payload: Record<string, any> = {
     analysis_id: analysisId,
     concept_name: conceptName,
+    course_name: courseName ?? null,
     file_name: fileName ?? null,
     status,
     updated_at: new Date().toISOString(),
@@ -43,7 +45,6 @@ export async function POST(req: NextRequest) {
     })
 
   if (error) {
-    // 테이블 미생성 등 DB 오류는 조용히 처리 (localStorage는 이미 저장됨)
     console.error('[understanding] upsert 실패:', error.message)
     return NextResponse.json({ ok: false, error: error.message })
   }
@@ -51,10 +52,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-/**
- * DELETE /api/understanding
- * 이해 체크 취소 (토글 off)
- */
 export async function DELETE(req: NextRequest) {
   const { analysisId, conceptName, userId } = await req.json()
 
