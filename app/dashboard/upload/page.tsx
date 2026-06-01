@@ -68,7 +68,7 @@ export default function UploadPage() {
   const [showLimit, setShowLimit] = useState(false)
   const router = useRouter()
   const { reload, select } = useAnalysis()
-  const { isPro } = useAuth()
+  const { isPro, user } = useAuth()
 
   const usageCount = getUsageCount()
   const isLimitReached = !isPro && usageCount >= FREE_ANALYSIS_LIMIT
@@ -90,7 +90,7 @@ export default function UploadPage() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text.slice(0, 8000), fileName: file.name }),
+        body: JSON.stringify({ text: text.slice(0, 8000), fileName: file.name, userId: user?.id ?? null }),
       })
 
       const result = await res.json()

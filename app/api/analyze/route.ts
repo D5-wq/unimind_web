@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(req: NextRequest) {
-  const { text, fileName } = await req.json()
+  const { text, fileName, userId } = await req.json()
 
   if (!text || !fileName) {
     return NextResponse.json({ error: '텍스트 또는 파일명이 없어요' }, { status: 400 })
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
   ],
   "examPoints": [
-    "실제 시험에 나올 법한 구체적인 질문 형식 (예: 'A와 B의 차이를 설명하고 C 상황에서 어떤 것을 선택해야 하는지 근거와 함께 서술하시오')"
+    "실제 시험에 나올 법한 구체적인 질문 형식"
   ]
 }
 개념 4~7개, 강의흐름 4~6단계, 시험포인트 3~5개.`,
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('[OpenAI] 분석 실패:', err?.message)
-    return NextResponse.json({ error: 'AI 분석 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.' }, { status: 502 })
+    return NextResponse.json({ error: 'AI 분석 중 오류가 발생했어요.' }, { status: 502 })
   }
 
   const content = response.choices[0].message.content ?? ''
@@ -63,16 +63,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '분석 실패', raw: content }, { status: 500 })
   }
 
-  // Supabase에 저장
+  // Supabase에 user_id 포함 저장
+  const insertPayload: Record<string, any> = {
+    file_name: fileName,
+    one_liner: result.oneLiner,
+    summary: result.summary ?? null,
+    flow: result.flow,
+    concepts: result.concepts,
+    exam_points: result.examPoints,
+  }
+  if (userId) insertPayload.user_id = userId
+
   const { data: saved, error: saveError } = await supabase
     .from('analyses')
-    .insert({
-      file_name: fileName,
-      one_liner: result.oneLiner,
-      flow: result.flow,
-      concepts: result.concepts,
-      exam_points: result.examPoints,
-    })
+    .insert(insertPayload)
     .select('id')
     .single()
 

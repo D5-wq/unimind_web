@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "./auth-context"
 
 export interface AnalysisMeta {
   id: string
@@ -37,6 +38,7 @@ const AnalysisContext = createContext<AnalysisContextType>({
 })
 
 export function AnalysisProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
   const [allAnalyses, setAllAnalyses] = useState<AnalysisMeta[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null)
@@ -60,9 +62,14 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data, error } = await Promise.resolve(
-        supabase.from("analyses").select("id, file_name, one_liner, created_at").order("created_at", { ascending: false })
-      )
+      // 로그인 사용자면 user_id로 필터, 비로그인이면 localStorage
+      const userId = user?.id
+      const query = userId
+        ? supabase.from("analyses").select("id, file_name, one_liner, created_at").eq("user_id", userId).order("created_at", { ascending: false })
+        : supabase.from("analyses").select("id, file_name, one_liner, created_at").order("created_at", { ascending: false })
+
+      const { data, error } = await Promise.resolve(query)
+
       if (error || !data || data.length === 0) {
         setAllAnalyses(fromLocalStorage())
       } else {
@@ -76,9 +83,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setAllAnalyses(fromLocalStorage())
     }
-  }, [])
+  }, [user?.id])
 
-  useEffect(() => { reload() }, [reload])
+  useEffect(() => { reload() }, [reload, user?.id])
 
   // Load full analysis when selectedId changes
   useEffect(() => {
