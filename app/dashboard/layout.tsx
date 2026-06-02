@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/dashboard/sidebar-context"
 import { AnalysisProvider } from "@/components/dashboard/analysis-context"
 import { AuthProvider } from "@/components/dashboard/auth-context"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import { FeedbackButton } from "@/components/dashboard/feedback-button"
 
 function DashboardInner({ children }: { children: React.ReactNode }) {
   useKeyboardShortcuts()
@@ -16,6 +17,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
         <div className="flex-1 overflow-auto">{children}</div>
         <RightPanel />
       </main>
+      <FeedbackButton />
     </div>
   )
 }

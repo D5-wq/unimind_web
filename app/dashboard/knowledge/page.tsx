@@ -391,6 +391,27 @@ export default function KnowledgePage() {
                           </div>
                         </div>
                       )}
+
+                      {/* 점수 근거 카드 */}
+                      <div className="mt-4 rounded-xl bg-secondary/50 border border-border p-3">
+                        <p className="text-xs font-bold text-muted-foreground mb-2">📊 {p.predictedScore}점으로 예측한 근거</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { label: "이해 완료 개념", value: `${p.strongPoints.length + Math.max(0, p.conceptScores?.filter((c: any) => c.status === "understood").length - p.strongPoints.length)}개`, color: "text-green-600" },
+                            { label: "헷갈리는 개념", value: `${p.weakPoints.length}개`, color: "text-destructive" },
+                            { label: "미확인 개념", value: `${p.conceptScores?.filter((c: any) => c.status === "unknown").length ?? 0}개`, color: "text-muted-foreground" },
+                            { label: "시험까지", value: `D-${p.dday}`, color: p.dday <= 7 ? "text-destructive" : "text-primary" },
+                          ].map(({ label, value, color }) => (
+                            <div key={label} className="text-center rounded-lg bg-background p-2">
+                              <p className={`text-sm font-black ${color}`}>{value}</p>
+                              <p className="text-[10px] text-muted-foreground">{label}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                          이해도 + 난이도 가중치 + D-day 보정으로 계산
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

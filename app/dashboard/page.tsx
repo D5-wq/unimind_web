@@ -121,6 +121,29 @@ export default function DashboardPage() {
       <Header title="대시보드" subtitle="학습 현황을 한눈에 확인하세요" />
       <div className="flex-1 space-y-6 p-4 md:p-6">
 
+        {/* 온보딩 카드 — 첫 방문자 */}
+        {analyses.length === 0 && !upgraded && (
+          <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5">
+            <div className="flex items-start gap-4">
+              <div className="text-3xl flex-shrink-0">👋</div>
+              <div className="flex-1">
+                <p className="font-bold text-foreground mb-1">1분 안에 시작해봐요</p>
+                <p className="text-sm text-muted-foreground mb-4">강의 PDF 하나만 올리면 핵심 개념, 퀴즈, 예상 점수까지 나와요.</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {["① PDF 업로드", "② AI 분석 (8초)", "③ 퀴즈 + 점수 예측"].map((step, i) => (
+                    <span key={i} className="rounded-xl bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{step}</span>
+                  ))}
+                </div>
+                <Link href="/dashboard/upload">
+                  <button className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors">
+                    지금 시작하기 →
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 업그레이드 완료 알림 */}
         {upgraded && (
           <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
