@@ -137,28 +137,35 @@ function AnalysisContent() {
 
   // 공유 버튼
   const [copied, setCopied] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
-    if (!id) return
-    // 새 키 먼저, 없으면 옛날 키도 확인 (마이그레이션 호환)
+    if (!id) { setLoadError(true); return }
+    setLoadError(false)
+
+    // localStorage 우선 (새 키 → 옛날 키 순서)
     const saved = localStorage.getItem(STORAGE_KEYS.analysis(id)) ?? localStorage.getItem(`analysis-${id}`)
     if (saved) {
       try { const r = JSON.parse(saved); setResult(r); setNodes(buildNodes(r)); return } catch {}
     }
+
+    // Supabase 조회 (15초 타임아웃)
+    const timeout = setTimeout(() => setLoadError(true), 15000)
     supabase.from('analyses').select('one_liner, summary, flow, concepts, exam_points').eq('id', id).single()
-      .then(({ data }) => {
-        if (data) {
-          const r: AnalysisResult = {
-            oneLiner: data.one_liner ?? '',
-            summary: data.summary ?? undefined,
-            flow: data.flow as string[],
-            concepts: data.concepts as Concept[],
-            examPoints: data.exam_points as string[],
-          }
-          setResult(r); setNodes(buildNodes(r))
-          localStorage.setItem(STORAGE_KEYS.analysis(id), JSON.stringify(r))
+      .then(({ data, error }) => {
+        clearTimeout(timeout)
+        if (error || !data) { setLoadError(true); return }
+        const r: AnalysisResult = {
+          oneLiner: data.one_liner ?? '',
+          summary: data.summary ?? undefined,
+          flow: data.flow as string[],
+          concepts: data.concepts as Concept[],
+          examPoints: data.exam_points as string[],
         }
+        setResult(r); setNodes(buildNodes(r))
+        localStorage.setItem(STORAGE_KEYS.analysis(id), JSON.stringify(r))
       })
+      .catch(() => { clearTimeout(timeout); setLoadError(true) })
   }, [id])
 
   // 이해 체크 로드
@@ -318,6 +325,31 @@ function AnalysisContent() {
 
   const understoodCount = Object.values(understanding).filter(v => v === "understood").length
   const confusedCount = Object.values(understanding).filter(v => v === "confused").length
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col">
+        <Header title="분석 결과" subtitle="AI가 분석한 강의 내용을 확인하세요" />
+        <div className="flex flex-1 items-center justify-center p-6">
+          <div className="text-center max-w-sm">
+            <p className="text-4xl mb-4">😵</p>
+            <p className="font-bold text-foreground mb-2">분석 결과를 불러올 수 없어요</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {!id ? "분석 결과 ID가 없어요. 업로드 페이지에서 분석 후 다시 시도해보세요." : "데이터를 불러오는 데 실패했어요. 잠시 후 다시 시도해주세요."}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => window.location.reload()} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors">
+                다시 시도
+              </button>
+              <a href="/dashboard/upload" className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors">
+                새 분석하기
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!result) {
     return (

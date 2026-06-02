@@ -292,14 +292,23 @@ export default function DashboardPage() {
             <Card key={stat.title} className="rounded-2xl border-border shadow-sm">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground">{stat.title}</p>
                     <p className="mt-1 text-2xl font-bold text-foreground">{stat.value}</p>
                     {'sub' in stat && stat.sub && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">{(stat as any).sub}</p>
                     )}
+                    {/* D-Day 프로그레스 */}
+                    {stat.title.includes("시험") && closestExam && closestExam.dday <= 30 && (
+                      <div className="mt-2 h-1 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className={cn("h-full rounded-full transition-all", closestExam.dday <= 3 ? "bg-destructive" : closestExam.dday <= 7 ? "bg-orange-500" : "bg-primary")}
+                          style={{ width: `${Math.max(5, 100 - (closestExam.dday / 30) * 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className={cn("rounded-xl p-3", stat.bg)}>
+                  <div className={cn("rounded-xl p-3 flex-shrink-0", stat.bg)}>
                     <stat.icon className={cn("h-6 w-6", stat.color)} />
                   </div>
                 </div>
