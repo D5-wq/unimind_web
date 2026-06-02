@@ -195,37 +195,14 @@ export default function DashboardPage() {
       {showProCelebration && <ProCelebration onClose={() => setShowProCelebration(false)} />}
       <Header title="대시보드" subtitle="학습 현황을 한눈에 확인하세요" />
       <div className="flex-1 space-y-6 p-4 md:p-6">
-        <FadeIn delay={0}>
-
-        {/* 온보딩 카드 — 첫 방문자 */}
-        {analyses.length === 0 && !upgraded && (
-          <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5">
-            <div className="flex items-start gap-4">
-              <div className="text-3xl flex-shrink-0">👋</div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground mb-1">1분 안에 시작해봐요</p>
-                <p className="text-sm text-muted-foreground mb-4">강의 PDF 하나만 올리면 핵심 개념, 퀴즈, 예상 점수까지 나와요.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {["① PDF 업로드", "② AI 분석 (8초)", "③ 퀴즈 + 점수 예측"].map((step, i) => (
-                    <span key={i} className="rounded-xl bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{step}</span>
-                  ))}
-                </div>
-                <Link href="/dashboard/upload">
-                  <button className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors">
-                    지금 시작하기 →
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
+        <FadeIn>
 
         {/* 업그레이드 완료 알림 */}
         {upgraded && (
           <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
             <Crown className="h-5 w-5 text-primary flex-shrink-0" />
             <div>
-              <p className="font-semibold text-primary">Pro 업그레이드 완료! 🎉</p>
+              <p className="font-semibold text-primary">Pro 업그레이드 완료!</p>
               <p className="text-sm text-muted-foreground">이제 무제한으로 강의를 분석할 수 있어요.</p>
             </div>
           </div>
@@ -317,44 +294,25 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* 헷갈린 개념 복습 배너 */}
-        {confusedConcepts.length > 0 && (
-          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-orange-500" />
-                <p className="text-sm font-semibold text-foreground">헷갈린 개념 복습하기</p>
-                <span className="text-xs bg-orange-500/15 text-orange-600 rounded-lg px-2 py-0.5 font-medium">
-                  {confusedConcepts.length}개
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {confusedConcepts.map(({ concept, analysisId }) => (
-                <Link key={`${analysisId}-${concept}`} href={`/dashboard/analysis?id=${analysisId}`}>
-                  <button className="rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 text-xs px-3 py-1.5 font-medium transition-colors">
-                    {concept} →
-                  </button>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="grid gap-6 lg:grid-cols-3">
           {/* 최근 분석 강의 */}
           <div className="lg:col-span-2">
             {analyses.length === 0 ? (
-              <Card className="rounded-2xl border-2 border-dashed border-border shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                    <Upload className="h-8 w-8 text-primary" />
+              <Card className="rounded-2xl border-2 border-dashed border-border">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
+                    <Upload className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold">아직 분석한 강의가 없어요</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">PDF를 업로드하면 AI가 강의를 분석해줍니다</p>
-                  <Link href="/dashboard/upload" className="mt-6">
-                    <Button className="rounded-xl px-8">
-                      <Upload className="mr-2 h-4 w-4" />PDF 업로드하기
+                  <h3 className="text-base font-bold text-foreground mb-1">첫 강의 자료를 올려보세요</h3>
+                  <p className="text-sm text-muted-foreground mb-2">PDF 업로드 → AI 분석 → 예상 점수까지 30초</p>
+                  <div className="flex gap-2 flex-wrap justify-center mb-5 text-xs text-muted-foreground">
+                    <span className="rounded-lg bg-secondary px-2 py-1">핵심 개념 추출</span>
+                    <span className="rounded-lg bg-secondary px-2 py-1">AI 퀴즈 생성</span>
+                    <span className="rounded-lg bg-secondary px-2 py-1">예상 점수 계산</span>
+                  </div>
+                  <Link href="/dashboard/upload">
+                    <Button className="rounded-xl px-6 gap-2">
+                      <Upload className="h-4 w-4" />PDF 업로드하기
                     </Button>
                   </Link>
                 </CardContent>
