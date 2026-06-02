@@ -145,6 +145,26 @@ function QuizContent() {
         }
         const prev = storageGet<any[]>(STORAGE_KEYS.quizHistory, [])
         storageSet(STORAGE_KEYS.quizHistory, [entry, ...prev].slice(0, 50))
+
+        // 오답노트 저장
+        const wrongQuestions = questions.filter((_, i) => i < answers.length && !answers[i])
+        if (wrongQuestions.length > 0) {
+          const wrongNotes = storageGet<any[]>("wrong-notes", [])
+          wrongQuestions.forEach(q => {
+            wrongNotes.unshift({
+              id: `wrong-${Date.now()}-${Math.random()}`,
+              analysisId: id,
+              fileName: meta.fileName ?? id,
+              question: q.question,
+              answer: q.answer,
+              explanation: q.explanation,
+              type: q.type,
+              conceptName: q.conceptName,
+              timestamp: Date.now(),
+            })
+          })
+          storageSet("wrong-notes", wrongNotes.slice(0, 100))
+        }
       }
 
       setDone(true)

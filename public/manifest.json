@@ -1,0 +1,15 @@
+{
+  "name": "UniMind — AI 학습 코치",
+  "short_name": "UniMind",
+  "description": "PDF 업로드하면 AI가 개념 정리, 퀴즈, 시험 예측까지",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#13100f",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-light-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable any" }
+  ]
+}

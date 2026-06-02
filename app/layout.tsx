@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     title: 'UniMind — AI 강의 학습 어시스턴트',
     description: 'PDF 업로드 한 번으로 핵심 개념 정리, 퀴즈 자동 생성, 시험 점수 예측까지.',
   },
+  manifest: "/manifest.json",
   icons: {
     icon: [
       {

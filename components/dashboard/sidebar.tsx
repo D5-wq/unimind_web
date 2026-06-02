@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   Home, Upload, FileText, Network, MessageSquare, GraduationCap,
   Settings, Sparkles, Calendar, StickyNote, LayoutList, BookOpenCheck, X,
-  Target, Crown, LogOut, LogIn, Flame, RotateCcw,
+  Target, Crown, LogOut, LogIn, Flame, RotateCcw, XCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
@@ -27,6 +27,7 @@ const navigation = [
   { name: "개념 맵", href: "/dashboard/concept-map", icon: Network },
   { name: "시험 준비", href: "/dashboard/exam", icon: BookOpenCheck },
   { name: "퀴즈", href: "/dashboard/quiz", icon: Target },
+  { name: "오답노트", href: "/dashboard/wrong-notes", icon: XCircle },
   { name: "지식 그래프", href: "/dashboard/knowledge", icon: Network },
   { name: "요금제", href: "/dashboard/pricing", icon: Crown },
 ]

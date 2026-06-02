@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
+import { AnalysisSkeleton } from "@/components/ui/skeleton"
 import { scheduleReview, completeReview, getNextReview } from "@/lib/spaced-repetition"
 import { logEvent, EVENTS } from "@/lib/events"
 import Link from "next/link"
@@ -268,14 +269,26 @@ function AnalysisContent() {
     }
   }
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const shareUrl = id
       ? `${window.location.origin}/share/${id}`
       : window.location.href
+    logEvent(EVENTS.SHARE_LINK_COPIED, { analysisId: id }, user?.id)
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: result?.oneLiner ?? "UniMind 분석 결과",
+          text: "AI가 분석한 강의 내용을 확인해봐요!",
+          url: shareUrl,
+        })
+        return
+      } catch {}
+    }
+
     navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-    logEvent(EVENTS.SHARE_LINK_COPIED, { analysisId: id }, user?.id)
   }
 
   const toggleFlow = (i: number) =>
@@ -288,13 +301,7 @@ function AnalysisContent() {
     return (
       <div className="flex flex-col">
         <Header title="분석 결과" subtitle="AI가 분석한 강의 내용을 확인하세요" />
-        <div className="flex flex-1 items-center justify-center p-6">
-          <div className="text-center text-muted-foreground">
-            <Sparkles className="mx-auto mb-4 h-12 w-12 animate-pulse text-primary" />
-            <p className="font-medium">분석 결과를 불러오는 중...</p>
-            <p className="mt-2 text-sm">업로드 페이지에서 분석 완료 후 결과 보기를 눌러주세요</p>
-          </div>
-        </div>
+        <AnalysisSkeleton />
       </div>
     )
   }
