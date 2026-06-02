@@ -143,6 +143,15 @@ export default function LandingPage() {
         </div>
         <p className="text-sm text-white/60 font-medium">{t.free}</p>
 
+        {/* Product Hunt 배지 */}
+        <a href="https://www.producthunt.com/posts/unimind" target="_blank" rel="noopener noreferrer" className="mt-6 inline-block hover:opacity-90 transition-opacity">
+          <img
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=unimind&theme=light"
+            alt="UniMind on Product Hunt"
+            style={{ width: 200, height: 43 }}
+          />
+        </a>
+
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4">
           {t.stats.map(({ v, l, emoji }, i) => {
             const bg = ["bg-yellow-400","bg-green-400","bg-blue-400","bg-pink-400"][i]
