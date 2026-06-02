@@ -341,8 +341,56 @@ function AnalysisContent() {
       <Header title="분석 결과" subtitle="AI가 분석한 강의 내용을 확인하세요" />
       <div className="flex-1 p-6">
 
+        {/* 예상 점수 + 공유 카드 */}
+        {(() => {
+          const total = result.concepts.length
+          if (total === 0) return null
+          const checked = understoodCount + confusedCount
+          if (checked === 0) return null
+          const score = Math.round((understoodCount / checked) * 85 + 10)
+          const grade = score >= 90 ? "A+" : score >= 85 ? "A" : score >= 80 ? "B+" : score >= 75 ? "B" : score >= 70 ? "C+" : score >= 65 ? "C" : "D"
+          const percentile = score >= 85 ? "상위 15%" : score >= 75 ? "상위 30%" : score >= 65 ? "상위 50%" : "하위 50%"
+          const scoreColor = score >= 80 ? "text-green-600 bg-green-500/10 border-green-500/20" : score >= 65 ? "text-primary bg-primary/10 border-primary/20" : "text-destructive bg-destructive/10 border-destructive/20"
+          return (
+            <Card className="mb-4 rounded-2xl border-border overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row">
+                  {/* 점수 섹션 */}
+                  <div className="flex items-center gap-5 p-5 flex-1">
+                    <div className={cn("flex h-16 w-16 flex-shrink-0 flex-col items-center justify-center rounded-2xl border-2 font-black", scoreColor)}>
+                      <span className="text-2xl leading-none">{grade}</span>
+                      <span className="text-xs opacity-70">{score}점</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">현재 이해도 기준 예상 점수</p>
+                      <p className="font-bold text-foreground">{result.oneLiner}</p>
+                      <div className="mt-1.5 flex gap-2 flex-wrap">
+                        <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{percentile} 예상</span>
+                        <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs text-muted-foreground">이해 {understoodCount}/{total}</span>
+                        {confusedCount > 0 && <span className="rounded-lg bg-orange-500/10 text-orange-600 px-2 py-0.5 text-xs">취약 {confusedCount}개</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {/* 근거 섹션 */}
+                  <div className="border-t md:border-t-0 md:border-l border-border bg-secondary/30 p-4 flex gap-3 md:w-56">
+                    {[
+                      { label: "이해 개념", value: `+${Math.round(understoodCount * 2.5)}`, color: "text-green-600" },
+                      { label: "취약 개념", value: `-${Math.round(confusedCount * 2.8)}`, color: "text-destructive" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex-1 text-center rounded-xl bg-background p-2">
+                        <p className={`text-sm font-black ${color}`}>{value}</p>
+                        <p className="text-[10px] text-muted-foreground">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
+
         {/* 상단 요약 카드 */}
-        <Card className="mb-6 rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
+        <Card className="mb-6 rounded-2xl border-primary/20 bg-primary/5">
           <CardContent className="p-5">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">

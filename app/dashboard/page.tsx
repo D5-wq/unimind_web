@@ -578,6 +578,60 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* 과목별 건강도 */}
+        {analyses.length >= 2 && (
+          <Card className="rounded-2xl border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                과목별 이해도
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {analyses.slice(0, 4).map(a => {
+                  const understanding = storageGet<Record<string, string>>(STORAGE_KEYS.conceptUnderstanding(a.id), {})
+                  const analysis = storageGet<{ concepts?: any[] }>(STORAGE_KEYS.analysis(a.id), {})
+                  const total = analysis.concepts?.length ?? 0
+                  const understood = Object.values(understanding).filter(v => v === "understood").length
+                  const confused = Object.values(understanding).filter(v => v === "confused").length
+                  const checked = understood + confused
+                  const score = checked === 0 ? null : Math.round((understood / checked) * 85 + 10)
+                  const name = a.name.replace(/\.[^.]+$/, "").slice(0, 12)
+                  return (
+                    <Link key={a.id} href={`/dashboard/analysis?id=${a.id}`}>
+                      <div className="rounded-xl border border-border p-3 hover:border-primary/30 transition-colors cursor-pointer">
+                        <p className="text-xs font-medium text-foreground truncate mb-2">{name}</p>
+                        <div className="flex items-end gap-2 mb-1.5">
+                          <span className={cn("text-2xl font-black",
+                            score === null ? "text-muted-foreground" :
+                            score >= 80 ? "text-green-600" :
+                            score >= 65 ? "text-primary" : "text-destructive"
+                          )}>
+                            {score ?? "—"}
+                          </span>
+                          {score && <span className="text-xs text-muted-foreground mb-1">점</span>}
+                        </div>
+                        <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className={cn("h-full rounded-full transition-all",
+                              score === null ? "w-0" :
+                              score >= 80 ? "bg-green-500" :
+                              score >= 65 ? "bg-primary" : "bg-destructive"
+                            )}
+                            style={{ width: score ? `${score}%` : "0%" }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">{total}개 개념</p>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 빠른 이동 */}
         {analyses.length > 0 && (
           <div className="grid gap-3 md:grid-cols-4">
