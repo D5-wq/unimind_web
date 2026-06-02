@@ -221,32 +221,89 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* 히어로 */}
-      <section className="mx-auto max-w-5xl px-4 md:px-6 pt-16 md:pt-24 pb-12">
-        <div className="mb-5 inline-block rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700">
-          {t.hero.badge}
+      {/* 히어로 — 분할 레이아웃 */}
+      <section className="mx-auto max-w-6xl px-4 md:px-6 pt-14 md:pt-20 pb-12">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+
+          {/* 왼쪽: 텍스트 */}
+          <div>
+            <div className="mb-5 inline-block rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700">
+              {t.hero.badge}
+            </div>
+            <h1 className="mb-5 text-4xl md:text-5xl font-black leading-[1.08] tracking-tighter text-gray-900 whitespace-pre-line">
+              {t.hero.h1}
+            </h1>
+            <p className="mb-8 text-base text-gray-500 leading-relaxed whitespace-pre-line">
+              {t.hero.sub}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button onClick={handleLogin} disabled={loading} className="flex items-center justify-center gap-3 rounded-2xl bg-gray-900 px-7 py-4 text-base font-bold text-white shadow-lg hover:bg-gray-700 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+                <GoogleIcon />
+                {loading ? t.loading : t.hero.cta}
+              </button>
+              <Link href="/dashboard" className="flex">
+                <button className="flex-1 rounded-2xl border-2 border-gray-200 px-7 py-4 text-base font-medium text-gray-600 hover:bg-gray-50 transition-all">
+                  {t.nav.browse} →
+                </button>
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-gray-400">{t.hero.sub2}</p>
+            <a href="https://www.producthunt.com/posts/unimind-2" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block">
+              <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=unimind-2&theme=light" alt="UniMind on Product Hunt" style={{ width: 180, height: 39 }} />
+            </a>
+          </div>
+
+          {/* 오른쪽: 제품 목업 */}
+          <div className="relative">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+              {/* 앱 헤더 */}
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+                <div className="flex gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-red-400" />
+                  <div className="h-3 w-3 rounded-full bg-yellow-400" />
+                  <div className="h-3 w-3 rounded-full bg-green-400" />
+                </div>
+                <span className="text-xs text-gray-400 ml-2">컴퓨터네트워크_7주차.pdf</span>
+                <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-600">분석 완료</span>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* 예상 점수 */}
+                <div className="flex items-center gap-3 rounded-xl bg-purple-50 border border-purple-100 p-3">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-lg">72</div>
+                  <div>
+                    <p className="text-[11px] text-purple-500 font-medium">예상 점수</p>
+                    <p className="text-xs text-gray-500">12개 개념 · 퀴즈 정답률 78%</p>
+                  </div>
+                </div>
+                {/* 취약 개념 */}
+                <div>
+                  <p className="text-[11px] font-bold text-red-500 mb-1.5">⚠ 집중 필요</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["Congestion Control", "Flow Control", "DNS"].map(c => (
+                      <span key={c} className="rounded-lg bg-red-50 border border-red-100 text-red-500 text-[11px] px-2 py-0.5">{c}</span>
+                    ))}
+                  </div>
+                </div>
+                {/* 추천 학습 */}
+                <div>
+                  <p className="text-[11px] font-bold text-gray-500 mb-1.5">오늘 공부할 것</p>
+                  {["Sliding Window Protocol", "TCP State Machine", "3-Way Handshake 복습"].map((item, i) => (
+                    <div key={item} className="flex items-center gap-2 py-1">
+                      <span className="text-[11px] font-black text-purple-400 w-4">{i + 1}</span>
+                      <span className="text-xs text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* 퀴즈 버튼 */}
+                <div className="rounded-xl bg-gray-900 py-2.5 text-center">
+                  <span className="text-xs font-bold text-white">퀴즈 40문제 시작 →</span>
+                </div>
+              </div>
+            </div>
+            {/* 그림자 효과 */}
+            <div className="absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-2xl bg-purple-100" />
+          </div>
         </div>
-        <h1 className="mb-6 text-4xl md:text-6xl font-black leading-tight tracking-tighter text-gray-900 whitespace-pre-line">
-          {t.hero.h1}
-        </h1>
-        <p className="mb-8 max-w-lg text-base md:text-lg text-gray-500 leading-relaxed whitespace-pre-line">
-          {t.hero.sub}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button onClick={handleLogin} disabled={loading} className="flex items-center justify-center gap-3 rounded-2xl bg-gray-900 px-7 py-4 text-base font-bold text-white shadow-lg hover:bg-gray-700 transition-all hover:-translate-y-0.5 disabled:opacity-50">
-            <GoogleIcon />
-            {loading ? t.loading : t.hero.cta}
-          </button>
-          <Link href="/dashboard" className="flex">
-            <button className="flex-1 rounded-2xl border-2 border-gray-200 px-7 py-4 text-base font-medium text-gray-600 hover:bg-gray-50 transition-all">
-              {t.nav.browse} →
-            </button>
-          </Link>
-        </div>
-        <p className="mt-3 text-xs text-gray-400">{t.hero.sub2}</p>
-        <a href="https://www.producthunt.com/posts/unimind-2" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block">
-          <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=unimind-2&theme=light" alt="UniMind on Product Hunt" style={{ width: 180, height: 39 }} />
-        </a>
       </section>
 
       {/* 실제 결과 데모 */}
