@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
@@ -54,6 +54,66 @@ interface UploadedFile {
   progress: number
   result?: any
   supabaseId?: string
+}
+
+const STEPS = [
+  { label: "텍스트 추출 중", duration: 1200 },
+  { label: "핵심 개념 발견 중", duration: 2500 },
+  { label: "강의 흐름 분석 중", duration: 2000 },
+  { label: "시험 포인트 추출 중", duration: 1800 },
+  { label: "퀴즈 문제 생성 중", duration: 2000 },
+  { label: "예상 점수 계산 중", duration: 1500 },
+]
+
+function AnalyzingSteps() {
+  const [step, setStep] = useState(0)
+  const [done, setDone] = useState<number[]>([])
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    let cur = 0
+    const advance = () => {
+      if (cur >= STEPS.length - 1) return
+      timerRef.current = setTimeout(() => {
+        setDone(prev => [...prev, cur])
+        cur++
+        setStep(cur)
+        advance()
+      }, STEPS[cur].duration)
+    }
+    advance()
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
+
+  return (
+    <div className="mt-4 rounded-xl border border-border bg-secondary/20 p-4 space-y-2">
+      {STEPS.map((s, i) => {
+        const isDone = done.includes(i)
+        const isCurrent = step === i
+        return (
+          <div key={i} className={cn("flex items-center gap-3 text-sm transition-opacity duration-300", i > step + 1 ? "opacity-30" : "opacity-100")}>
+            <div className={cn(
+              "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+              isDone ? "bg-green-500 text-white" :
+              isCurrent ? "bg-primary text-primary-foreground animate-pulse" :
+              "bg-secondary border border-border text-muted-foreground"
+            )}>
+              {isDone ? "✓" : i + 1}
+            </div>
+            <span className={cn(
+              "transition-colors",
+              isDone ? "text-muted-foreground line-through" :
+              isCurrent ? "text-foreground font-medium" :
+              "text-muted-foreground"
+            )}>
+              {s.label}
+            </span>
+            {isCurrent && <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse ml-auto" />}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function formatFileSize(bytes: number): string {
@@ -348,15 +408,7 @@ export default function UploadPage() {
                     </div>
 
                     {file.status === "analyzing" && (
-                      <div className="mt-4 rounded-xl bg-accent/10 p-4">
-                        <div className="flex items-center gap-3">
-                          <Sparkles className="h-5 w-5 animate-pulse text-accent" />
-                          <div>
-                            <p className="text-sm font-medium">AI가 강의 내용을 분석하고 있습니다</p>
-                            <p className="text-xs text-muted-foreground">핵심 개념 추출, 요약 생성, 시험 예상 문제 분석 중...</p>
-                          </div>
-                        </div>
-                      </div>
+                      <AnalyzingSteps />
                     )}
 
                     {file.status === "complete" && file.result && (
