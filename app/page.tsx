@@ -245,9 +245,9 @@ export default function LandingPage() {
                 <GoogleIcon />
                 {loading ? t.loading : t.hero.cta}
               </button>
-              <Link href="/dashboard" className="flex">
+              <Link href="/sample" className="flex">
                 <button className="flex-1 rounded-2xl border-2 border-gray-200 px-7 py-4 text-base font-medium text-gray-600 hover:bg-gray-50 transition-all">
-                  {t.nav.browse} →
+                  샘플 결과 보기 →
                 </button>
               </Link>
             </div>
