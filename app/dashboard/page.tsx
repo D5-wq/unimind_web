@@ -21,6 +21,7 @@ import { getStreak, getStreakEmoji, isStreakAtRisk, type StreakData } from "@/li
 import { getDueCards, getReviewSummary, type RepCard } from "@/lib/spaced-repetition"
 import { STORAGE_KEYS, storageGet } from "@/lib/storage"
 import { FadeIn } from "@/components/ui/motion"
+import { ProCelebration } from "@/components/ui/pro-celebration"
 
 interface AnalysisEntry {
   id: string; name: string; uploadedAt: number
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("안녕하세요!")
   const [streak, setStreak] = useState<StreakData | null>(null)
   const [upgraded, setUpgraded] = useState(false)
+  const [showProCelebration, setShowProCelebration] = useState(false)
   const [dueCards, setDueCards] = useState<RepCard[]>([])
   const [reviewSummary, setReviewSummary] = useState({ total: 0, dueToday: 0, mastered: 0 })
   const [confusedConcepts, setConfusedConcepts] = useState<{ concept: string; analysisId: string; fileName: string }[]>([])
@@ -104,10 +106,18 @@ export default function DashboardPage() {
     const url = new URL(window.location.href)
     if (url.searchParams.get("upgraded") === "1") {
       setUpgraded(true)
+      setShowProCelebration(true)
       url.searchParams.delete("upgraded")
       window.history.replaceState({}, "", url.toString())
     }
-  }, [])
+
+    // 첫 Pro 감지 시 축하 (개발자 계정 등)
+    const celebratedKey = "pro-celebrated"
+    if (!localStorage.getItem(celebratedKey) && isPro) {
+      localStorage.setItem(celebratedKey, "1")
+      setTimeout(() => setShowProCelebration(true), 800)
+    }
+  }, [isPro])
 
   const upcomingExams = exams
     .map(e => ({ ...e, dday: calcDDay(e.date) }))
@@ -182,6 +192,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col">
+      {showProCelebration && <ProCelebration onClose={() => setShowProCelebration(false)} />}
       <Header title="대시보드" subtitle="학습 현황을 한눈에 확인하세요" />
       <div className="flex-1 space-y-6 p-4 md:p-6">
         <FadeIn delay={0}>

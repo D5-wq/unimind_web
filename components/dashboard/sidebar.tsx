@@ -194,12 +194,12 @@ export function Sidebar() {
         )}
 
         {isPro && (
-          <div className="mt-4 mx-0">
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-2">
-              <Crown className="h-4 w-4 text-primary flex-shrink-0" />
+          <div className="mt-4">
+            <div className="rounded-xl p-3 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)" }}>
+              <Crown className="h-4 w-4 text-yellow-300 flex-shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-primary">Pro 사용 중</p>
-                <p className="text-xs text-muted-foreground">무제한 분석 가능</p>
+                <p className="text-xs font-black text-white">Pro ✨</p>
+                <p className="text-xs text-purple-200">무제한 분석 중</p>
               </div>
             </div>
           </div>
