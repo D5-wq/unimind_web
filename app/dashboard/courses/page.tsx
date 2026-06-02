@@ -108,7 +108,8 @@ export default function CoursesPage() {
               const healthScore = checked === 0 ? null : Math.round((totalUnderstood / checked) * 85 + 10)
 
               return (
-                <Card key={course.id} className={cn("group rounded-2xl border transition-all hover:border-primary/30", color.border)}>
+                <Link key={course.id} href={`/dashboard/courses/${course.id}`} className="block">
+              <Card className={cn("group rounded-2xl border transition-all hover:border-primary/30 cursor-pointer", color.border)}>
                   <CardContent className="p-5">
                     <div className="flex items-start gap-4">
                       <div className={cn("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl", color.bg)}>
@@ -179,6 +180,7 @@ export default function CoursesPage() {
                     </div>
                   </CardContent>
                 </Card>
+              </Link>
               )
             })}
           </div>
