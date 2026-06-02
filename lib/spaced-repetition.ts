@@ -19,7 +19,8 @@ export interface RepCard {
   createdAt: string
 }
 
-const KEY = "unimind-spaced-rep"
+import { STORAGE_KEYS, storageGet, storageSet } from "./storage"
+const KEY = STORAGE_KEYS.spacedRep
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -32,13 +33,11 @@ function addDays(days: number): string {
 }
 
 function loadAll(): Record<string, RepCard> {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "{}")
-  } catch { return {} }
+  return storageGet<Record<string, RepCard>>(KEY, {})
 }
 
 function saveAll(data: Record<string, RepCard>) {
-  localStorage.setItem(KEY, JSON.stringify(data))
+  storageSet(KEY, data)
 }
 
 function cardKey(analysisId: string, conceptName: string) {

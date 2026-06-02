@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Sparkles, Brain, FileText, MessageSquare, Target, ArrowRight, Zap, CheckCircle, Flame, Crown, BookOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
 export default function LandingPage() {
@@ -18,163 +17,159 @@ export default function LandingPage() {
   }
 
   const features = [
-    { icon: FileText, title: "PDF/PPTX 분석", desc: "강의 자료를 업로드하면 AI가 즉시 핵심을 뽑아냅니다" },
-    { icon: Brain, title: "핵심 개념 추출", desc: "중요한 개념을 자동으로 정리하고 이해도를 체크합니다" },
-    { icon: Target, title: "AI 퀴즈 생성", desc: "개념 기반 OX·4지선다 문제가 자동으로 만들어집니다" },
-    { icon: MessageSquare, title: "AI 질문 답변", desc: "헷갈리는 개념은 AI에게 바로 물어보세요" },
-  ]
-
-  const stats = [
-    { value: "8초", label: "평균 분석 시간" },
-    { value: "∞", label: "퀴즈 문제" },
-    { value: "무료", label: "기본 사용" },
-    { value: "100%", label: "AI 기반" },
+    { emoji: "📄", title: "PDF 올리기", desc: "강의 자료를 던지면", color: "bg-yellow-400", border: "border-yellow-500" },
+    { emoji: "🧠", title: "AI가 정리", desc: "핵심 개념을 뽑아줌", color: "bg-blue-400", border: "border-blue-500" },
+    { emoji: "🎯", title: "퀴즈 자동생성", desc: "OX, 4지선다 뚝딱", color: "bg-green-400", border: "border-green-500" },
+    { emoji: "📊", title: "시험 점수 예측", desc: "지금 상태면 몇 점?", color: "bg-pink-400", border: "border-pink-500" },
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+
       {/* 헤더 */}
-      <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-card/80 px-6 md:px-8 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
+      <header className="flex h-16 w-full items-center justify-between px-6 md:px-10">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-xl shadow-[3px_3px_0px_#00000030]">
+            🧠
           </div>
-          <span className="text-xl font-bold text-foreground">UniMind</span>
+          <span className="text-xl font-black text-white tracking-tight">UniMind</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
-            <Button variant="ghost" className="rounded-xl text-sm">둘러보기</Button>
+            <button className="rounded-2xl border-2 border-white/40 bg-white/20 px-4 py-1.5 text-sm font-bold text-white backdrop-blur-sm hover:bg-white/30 transition-colors">
+              둘러보기
+            </button>
           </Link>
-          <Button
+          <button
             onClick={handleGoogleLogin}
             disabled={loginLoading}
-            className="rounded-xl gap-2 text-sm"
+            className="rounded-2xl border-2 border-white bg-white px-4 py-1.5 text-sm font-black text-purple-700 shadow-[3px_3px_0px_#ffffff60] hover:translate-y-px hover:shadow-[2px_2px_0px_#ffffff60] transition-all disabled:opacity-60"
           >
-            {loginLoading ? (
-              <Sparkles className="h-4 w-4 animate-pulse" />
-            ) : (
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            )}
-            Google로 시작하기
-          </Button>
+            {loginLoading ? "로딩..." : "로그인"}
+          </button>
         </div>
       </header>
 
       {/* 히어로 */}
-      <section className="flex min-h-screen flex-col items-center justify-center px-4 pt-16 text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
-          <Zap className="h-3.5 w-3.5" />
-          AI 기반 강의 학습 도우미
+      <section className="flex flex-col items-center justify-center px-4 pb-16 pt-12 text-center">
+
+        {/* 배지 */}
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border-2 border-white/50 bg-white/20 px-4 py-1.5 text-sm font-bold text-white backdrop-blur-sm">
+          ⚡ AI 강의 학습 코치
         </div>
-        <h1 className="mb-4 text-4xl md:text-5xl font-bold leading-tight tracking-tight text-foreground">
-          강의 자료 올리면<br />
-          <span className="text-primary">AI가 공부를 대신 정리해줘요</span>
+
+        {/* 메인 타이틀 */}
+        <h1 className="mb-4 text-5xl md:text-7xl font-black leading-tight tracking-tight text-white drop-shadow-lg">
+          공부를<br />
+          <span className="relative inline-block">
+            <span className="relative z-10 text-yellow-300">AI한테 맡겨</span>
+            <span className="absolute -bottom-1 left-0 right-0 h-3 rounded-full bg-yellow-500/40 blur-sm" />
+          </span>
         </h1>
-        <p className="mb-8 max-w-lg text-lg text-muted-foreground">
-          PDF·PPTX 업로드 → 개념 정리 → 퀴즈 자동 생성.<br />
-          시험 전날 밤새우는 일 없애드립니다.
+
+        <p className="mb-10 max-w-md text-lg font-medium text-white/80 leading-relaxed">
+          PDF 업로드 → 개념 정리 → 퀴즈 → 시험 점수 예측<br />
+          밤새우는 일 없애드립니다 🌙
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
-          <Button size="lg" className="rounded-xl px-8 gap-2 h-12" onClick={handleGoogleLogin} disabled={loginLoading}>
-            {loginLoading ? <Sparkles className="h-5 w-5 animate-pulse" /> : (
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            )}
-            Google로 무료 시작
-          </Button>
+        {/* CTA 버튼들 */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loginLoading}
+            className="group flex items-center gap-3 rounded-3xl border-4 border-white bg-white px-8 py-4 text-lg font-black text-purple-700 shadow-[5px_5px_0px_#ffffff50] hover:translate-y-1 hover:shadow-[3px_3px_0px_#ffffff50] transition-all disabled:opacity-60"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {loginLoading ? "잠깐만요..." : "Google로 무료 시작"}
+          </button>
+
           <Link href="/dashboard">
-            <Button variant="outline" size="lg" className="rounded-xl px-8 h-12">
-              로그인 없이 둘러보기 <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <button className="flex items-center gap-2 rounded-3xl border-4 border-white/50 bg-white/10 px-8 py-4 text-lg font-bold text-white backdrop-blur-sm hover:bg-white/20 transition-colors">
+              먼저 둘러보기 <ArrowRight className="h-5 w-5" />
+            </button>
           </Link>
         </div>
-        <p className="text-xs text-muted-foreground">신용카드 불필요 · 월 5회 분석 무료</p>
+        <p className="text-sm text-white/60 font-medium">신용카드 불필요 · 월 5회 무료</p>
 
-        {/* 스탯 */}
-        <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {stats.map(({ value, label }) => (
-            <div key={label} className="rounded-2xl border border-border bg-card px-6 py-4 text-center">
-              <p className="text-2xl font-black text-primary">{value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+        {/* 스탯 블록들 */}
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { v: "8초", l: "평균 분석 시간", bg: "bg-yellow-400", emoji: "⚡" },
+            { v: "무료", l: "기본 사용", bg: "bg-green-400", emoji: "🎁" },
+            { v: "∞", l: "퀴즈 문제", bg: "bg-blue-400", emoji: "🎯" },
+            { v: "100%", l: "AI 기반", bg: "bg-pink-400", emoji: "🤖" },
+          ].map(({ v, l, bg, emoji }) => (
+            <div key={l} className={`${bg} rounded-3xl border-4 border-white/60 px-6 py-5 text-center shadow-[4px_4px_0px_#00000020]`}>
+              <div className="text-2xl mb-1">{emoji}</div>
+              <p className="text-3xl font-black text-white drop-shadow">{v}</p>
+              <p className="text-xs font-bold text-white/80 mt-0.5">{l}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 기능 */}
-      <section className="px-4 py-20 max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-foreground mb-3">공부하는 방식을 바꿔드려요</h2>
-          <p className="text-muted-foreground">업로드 한 번으로 4가지 학습 도구가 자동으로 생성됩니다</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {features.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-2xl border border-border bg-card p-6 flex items-start gap-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                <Icon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">{title}</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 스트릭 섹션 */}
-      <section className="px-4 py-16 bg-primary/5 border-y border-primary/10">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="text-5xl mb-4">🔥</div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">매일 퀴즈로 스트릭을 쌓아보세요</h2>
-          <p className="text-muted-foreground mb-6">
-            오늘 퀴즈를 풀면 스트릭 +1. 연속 학습이 쌓일수록 성적도 올라가요.
-          </p>
-          <div className="flex justify-center gap-2 flex-wrap">
-            {[1, 2, 3, 4, 5, 6, 7].map(day => (
-              <div key={day} className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${day <= 5 ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-                {day <= 5 ? "🔥" : day}
+      {/* 기능 블록 */}
+      <section className="px-4 py-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">이렇게 작동해요</h2>
+            <p className="text-white/70 font-medium">업로드 한 번으로 4가지가 자동으로</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {features.map(({ emoji, title, desc, color, border }) => (
+              <div key={title} className={`${color} rounded-3xl border-4 ${border} p-5 text-center shadow-[5px_5px_0px_#00000020] hover:-translate-y-1 hover:shadow-[5px_8px_0px_#00000020] transition-all cursor-default`}>
+                <div className="text-4xl mb-3">{emoji}</div>
+                <p className="font-black text-white text-base">{title}</p>
+                <p className="text-xs font-medium text-white/80 mt-1">{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pro CTA */}
-      <section className="px-4 py-20 max-w-2xl mx-auto text-center">
-        <Crown className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-foreground mb-3">더 필요하다면 Pro로</h2>
-        <p className="text-muted-foreground mb-6">
-          무제한 분석, 오답 노트, PDF 내보내기.<br />
-          한 달 커피 2잔 가격으로 성적을 올려보세요.
-        </p>
-        <Link href="/dashboard/pricing">
-          <Button variant="outline" className="rounded-xl px-8 gap-2">
-            <Crown className="h-4 w-4" />
-            요금제 보기
-          </Button>
-        </Link>
+      {/* 스트릭 섹션 */}
+      <section className="px-4 py-16">
+        <div className="max-w-lg mx-auto text-center">
+          <div className="rounded-3xl border-4 border-white/30 bg-white/15 p-8 backdrop-blur-sm shadow-[6px_6px_0px_#00000020]">
+            <div className="text-5xl mb-4">🔥</div>
+            <h2 className="text-2xl font-black text-white mb-2">매일 퀴즈로 스트릭 쌓기</h2>
+            <p className="text-white/70 font-medium mb-6">연속 학습이 습관이 되고, 습관이 성적이 돼요</p>
+            <div className="flex justify-center gap-2">
+              {[1,2,3,4,5,6,7].map(d => (
+                <div key={d} className={`flex h-11 w-11 items-center justify-center rounded-2xl border-3 text-lg font-black shadow-[3px_3px_0px_#00000020] ${d <= 5 ? "border-orange-400 bg-orange-400 text-white" : "border-white/30 bg-white/20 text-white/50"}`}>
+                  {d <= 5 ? "🔥" : d}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 최하단 CTA */}
+      <section className="px-4 py-20 text-center">
+        <h2 className="text-3xl md:text-4xl font-black text-white mb-4">지금 바로 시작해요</h2>
+        <p className="text-white/70 font-medium mb-8">기말 전에 써봐야 효과 있어요 📚</p>
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loginLoading}
+          className="rounded-3xl border-4 border-white bg-white px-10 py-4 text-xl font-black text-purple-700 shadow-[6px_6px_0px_#ffffff40] hover:translate-y-1 hover:shadow-[4px_4px_0px_#ffffff40] transition-all disabled:opacity-60"
+        >
+          {loginLoading ? "로딩 중..." : "무료로 시작하기 🚀"}
+        </button>
       </section>
 
       {/* 푸터 */}
-      <footer className="border-t border-border px-6 py-8 text-center text-xs text-muted-foreground">
+      <footer className="border-t border-white/20 px-6 py-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary">
-            <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
-          </div>
-          <span className="font-semibold text-foreground">UniMind</span>
+          <span className="text-2xl">🧠</span>
+          <span className="font-black text-white text-lg">UniMind</span>
         </div>
-        <p>AI 학습 어시스턴트 · 대학생을 위한 공부 도구</p>
+        <p className="text-sm text-white/50 font-medium">AI 학습 코치 · 대학생을 위한 공부 도구</p>
       </footer>
     </div>
   )

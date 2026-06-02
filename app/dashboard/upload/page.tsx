@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { getUsageCount, incrementUsage, FREE_ANALYSIS_LIMIT } from "@/lib/stripe"
 import { logEvent, EVENTS } from "@/lib/events"
+import { STORAGE_KEYS, storageGet, storageSet } from "@/lib/storage"
 import Link from "next/link"
 
 async function extractTextFromFile(file: File): Promise<string> {
@@ -106,13 +107,13 @@ export default function UploadPage() {
         f.id === id ? { ...f, status: "complete", progress: 100, result, supabaseId: result.supabaseId } : f
       ))
 
-      localStorage.setItem(`analysis-${storageId}`, JSON.stringify(result))
-      localStorage.setItem(`meta-${storageId}`, JSON.stringify({ fileName: file.name, name: file.name, uploadedAt: Date.now() }))
+      storageSet(STORAGE_KEYS.analysis(storageId), result)
+      storageSet(STORAGE_KEYS.analysisMeta(storageId), { fileName: file.name, name: file.name, uploadedAt: Date.now() })
 
       await reload()
       select(storageId)
 
-      const prevNotifs = JSON.parse(localStorage.getItem("notifications") ?? "[]")
+      const prevNotifs = storageGet<any[]>(STORAGE_KEYS.notifications, [])
       prevNotifs.unshift({
         id: `notif-${storageId}`,
         analysisId: storageId,
@@ -121,7 +122,7 @@ export default function UploadPage() {
         timestamp: Date.now(),
         read: false,
       })
-      localStorage.setItem("notifications", JSON.stringify(prevNotifs.slice(0, 20)))
+      storageSet(STORAGE_KEYS.notifications, prevNotifs.slice(0, 20))
 
     } catch (err) {
       setFiles(prev => prev.map(f => f.id === id ? { ...f, status: "error" } : f))
@@ -360,22 +361,44 @@ export default function UploadPage() {
 
                     {file.status === "complete" && file.result && (
                       <div className="mt-4 space-y-3">
-                        <div className="rounded-xl bg-primary/5 p-3">
-                          <p className="text-sm font-medium text-primary">✨ {file.result.oneLiner}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm" className="rounded-lg"
-                            onClick={() => router.push(`/dashboard/analysis?id=${file.supabaseId ?? file.id}`)}
-                          >
-                            분석 결과 보기
-                          </Button>
-                          <Button
-                            variant="outline" size="sm" className="rounded-lg"
-                            onClick={() => router.push(`/dashboard/chat`)}
-                          >
-                            AI에게 질문하기
-                          </Button>
+                        <div className="rounded-xl bg-green-500/5 border border-green-500/20 p-4">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-foreground mb-1">✨ {file.result.oneLiner}</p>
+                              <div className="flex gap-3 text-xs text-muted-foreground mb-3">
+                                {file.result.concepts?.length > 0 && (
+                                  <span>핵심 개념 {file.result.concepts.length}개</span>
+                                )}
+                                {file.result.examPoints?.length > 0 && (
+                                  <span>시험 포인트 {file.result.examPoints.length}개</span>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-1 gap-2">
+                                <Button
+                                  size="sm" className="rounded-xl w-full gap-2"
+                                  onClick={() => router.push(`/dashboard/quiz?id=${file.supabaseId ?? file.id}`)}
+                                >
+                                  <Sparkles className="h-3.5 w-3.5" />
+                                  이해도 퀴즈 풀기 →
+                                </Button>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    variant="outline" size="sm" className="rounded-xl gap-1"
+                                    onClick={() => router.push(`/dashboard/analysis?id=${file.supabaseId ?? file.id}`)}
+                                  >
+                                    개념 확인하기
+                                  </Button>
+                                  <Button
+                                    variant="outline" size="sm" className="rounded-xl gap-1"
+                                    onClick={() => router.push(`/dashboard/analysis?id=${file.supabaseId ?? file.id}#summary`)}
+                                  >
+                                    요약 보기
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}

@@ -6,7 +6,8 @@ export interface StreakData {
   todayDone: boolean     // 오늘 퀴즈 완료 여부
 }
 
-const KEY = "unimind-streak"
+import { STORAGE_KEYS, storageGet, storageSet } from "./storage"
+const KEY = STORAGE_KEYS.streak
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -19,11 +20,7 @@ function yesterday(): string {
 }
 
 export function getStreak(): StreakData {
-  try {
-    const saved = localStorage.getItem(KEY)
-    if (saved) return JSON.parse(saved)
-  } catch {}
-  return { current: 0, longest: 0, lastActivityDate: null, totalQuizzes: 0, todayDone: false }
+  return storageGet<StreakData>(KEY, { current: 0, longest: 0, lastActivityDate: null, totalQuizzes: 0, todayDone: false })
 }
 
 export function recordQuizComplete(): StreakData {
@@ -33,7 +30,7 @@ export function recordQuizComplete(): StreakData {
   if (streak.lastActivityDate === todayStr) {
     // 오늘 이미 기록됨 — 퀴즈 수만 증가
     streak.totalQuizzes += 1
-    localStorage.setItem(KEY, JSON.stringify(streak))
+    storageSet(KEY, streak)
     return streak
   }
 
@@ -49,7 +46,7 @@ export function recordQuizComplete(): StreakData {
   streak.totalQuizzes += 1
   streak.todayDone = true
 
-  localStorage.setItem(KEY, JSON.stringify(streak))
+  storageSet(KEY, streak)
   return streak
 }
 

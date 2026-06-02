@@ -19,6 +19,7 @@ import { useAuth } from "@/components/dashboard/auth-context"
 import { useRouter } from "next/navigation"
 import { getStreak, getStreakEmoji, isStreakAtRisk, type StreakData } from "@/lib/streak"
 import { getDueCards, getReviewSummary, type RepCard } from "@/lib/spaced-repetition"
+import { STORAGE_KEYS, storageGet } from "@/lib/storage"
 
 interface AnalysisEntry {
   id: string; name: string; uploadedAt: number
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [upgraded, setUpgraded] = useState(false)
   const [dueCards, setDueCards] = useState<RepCard[]>([])
   const [reviewSummary, setReviewSummary] = useState({ total: 0, dueToday: 0, mastered: 0 })
+  const [confusedConcepts, setConfusedConcepts] = useState<{ concept: string; analysisId: string; fileName: string }[]>([])
 
   // 로컬 analyses 리스트 — context의 allAnalyses를 AnalysisEntry 형태로 변환
   const analyses: AnalysisEntry[] = allAnalyses.map(a => ({
@@ -55,12 +57,30 @@ export default function DashboardPage() {
   const recommendations = selectedAnalysis?.examPoints?.slice(0, 3) ?? []
 
   useEffect(() => {
-    try { const p = JSON.parse(localStorage.getItem("user-profile") ?? "{}"); if (p.name) setUserName(`${p.name}님!`) } catch {}
-    try { const c = JSON.parse(localStorage.getItem("courses") ?? "[]"); setCourseCount(c.length) } catch {}
-    try { const e = JSON.parse(localStorage.getItem("exams") ?? "[]"); setExams(e) } catch {}
+    const p = storageGet<{ name?: string }>(STORAGE_KEYS.userProfile, {})
+    if (p.name) setUserName(`${p.name}님!`)
+    const c = storageGet<any[]>(STORAGE_KEYS.courses, [])
+    setCourseCount(c.length)
+    const e = storageGet<Exam[]>(STORAGE_KEYS.exams, [])
+    setExams(e)
     try { setStreak(getStreak()) } catch {}
     try { setDueCards(getDueCards().slice(0, 5)) } catch {}
     try { setReviewSummary(getReviewSummary()) } catch {}
+    try {
+      const confused: { concept: string; analysisId: string; fileName: string }[] = []
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("concept-understanding-"))
+        .forEach(k => {
+          const analysisId = k.replace("concept-understanding-", "")
+          const data = storageGet<Record<string, string>>(k, {})
+          const meta = storageGet<Record<string, string>>(STORAGE_KEYS.analysisMeta(analysisId), {})
+          const fileName: string = meta.fileName ?? meta.name ?? analysisId
+          Object.entries(data).forEach(([concept, status]) => {
+            if (status === "confused") confused.push({ concept, analysisId, fileName })
+          })
+        })
+      setConfusedConcepts(confused.slice(0, 6))
+    } catch {}
     // 결제 완료 후 리다이렉트
     const url = new URL(window.location.href)
     if (url.searchParams.get("upgraded") === "1") {
@@ -166,6 +186,30 @@ export default function DashboardPage() {
             </Card>
           ))}
         </div>
+
+        {/* 헷갈린 개념 복습 배너 */}
+        {confusedConcepts.length > 0 && (
+          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-orange-500" />
+                <p className="text-sm font-semibold text-foreground">헷갈린 개념 복습하기</p>
+                <span className="text-xs bg-orange-500/15 text-orange-600 rounded-lg px-2 py-0.5 font-medium">
+                  {confusedConcepts.length}개
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {confusedConcepts.map(({ concept, analysisId }) => (
+                <Link key={`${analysisId}-${concept}`} href={`/dashboard/analysis?id=${analysisId}`}>
+                  <button className="rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 text-xs px-3 py-1.5 font-medium transition-colors">
+                    {concept} →
+                  </button>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* 최근 분석 강의 */}

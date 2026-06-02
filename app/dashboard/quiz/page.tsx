@@ -6,7 +6,7 @@ import { Header } from "@/components/dashboard/header"
 import { supabase } from "@/lib/supabase"
 import {
   Sparkles, Target, CheckCircle2, XCircle, ChevronRight,
-  RotateCcw, Trophy, Brain, Loader2, AlertTriangle,
+  RotateCcw, Trophy, Brain, Loader2, AlertTriangle, History, TrendingUp,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { recordQuizComplete, getStreakEmoji } from "@/lib/streak"
 import { logEvent, EVENTS } from "@/lib/events"
+import { STORAGE_KEYS, storageGet, storageSet } from "@/lib/storage"
 
 interface QuizQuestion {
   type: "ox" | "multiple"
@@ -46,15 +47,22 @@ function QuizContent() {
   const [done, setDone] = useState(false)
   const [answers, setAnswers] = useState<boolean[]>([])
   const [streakAfter, setStreakAfter] = useState<{ current: number } | null>(null)
+  const [history, setHistory] = useState<any[]>([])
+
+  // 퀴즈 히스토리 로드
+  useEffect(() => {
+    try {
+      const all = storageGet<any[]>(STORAGE_KEYS.quizHistory, [])
+      const filtered = id ? all.filter((h: any) => h.analysisId === id) : all
+      setHistory(filtered.slice(0, 5))
+    } catch {}
+  }, [id])
 
   // 분석 데이터 로드
   useEffect(() => {
     if (!id) return
-    const saved = localStorage.getItem(`analysis-${id}`)
-    if (saved) {
-      try { setAnalysis(JSON.parse(saved)) } catch {}
-      return
-    }
+    const saved = storageGet<AnalysisResult | null>(STORAGE_KEYS.analysis(id), null)
+    if (saved) { setAnalysis(saved); return }
     supabase.from('analyses').select('one_liner, concepts, exam_points').eq('id', id).single()
       .then(({ data }) => {
         if (data) {
@@ -64,7 +72,7 @@ function QuizContent() {
             examPoints: data.exam_points as string[],
           }
           setAnalysis(r)
-          localStorage.setItem(`analysis-${id}`, JSON.stringify(r))
+          storageSet(STORAGE_KEYS.analysis(id), r)
         }
       })
   }, [id])
@@ -116,9 +124,29 @@ function QuizContent() {
 
   const handleNext = () => {
     if (current + 1 >= questions.length) {
+      const finalScore = score + (selected === questions[current].answer ? 1 : 0)
       const updatedStreak = recordQuizComplete()
       setStreakAfter(updatedStreak)
-      logEvent(EVENTS.QUIZ_COMPLETE, { score, total: questions.length, analysisId: id })
+      logEvent(EVENTS.QUIZ_COMPLETE, { score: finalScore, total: questions.length, analysisId: id })
+
+      // 퀴즈 결과 저장
+      if (id) {
+        const meta = storageGet<Record<string, string>>(STORAGE_KEYS.analysisMeta(id), {})
+        const entry = {
+          id: `quiz-${Date.now()}`,
+          analysisId: id,
+          fileName: meta.fileName ?? meta.name ?? id,
+          oneLiner: analysis?.oneLiner ?? "",
+          score: finalScore,
+          total: questions.length,
+          pct: Math.round((finalScore / questions.length) * 100),
+          answers: [...answers, selected === questions[current].answer],
+          timestamp: Date.now(),
+        }
+        const prev = storageGet<any[]>(STORAGE_KEYS.quizHistory, [])
+        storageSet(STORAGE_KEYS.quizHistory, [entry, ...prev].slice(0, 50))
+      }
+
       setDone(true)
     } else {
       setCurrent(c => c + 1)
@@ -178,6 +206,43 @@ function QuizContent() {
                     <p className="text-lg font-bold text-foreground">{analysis.examPoints.length}개</p>
                   </div>
                 </div>
+
+                {/* 이전 기록 */}
+                {history.length > 0 && (
+                  <div className="mb-4 text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                      <History className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground font-medium">이전 기록</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      {history.map((h, i) => (
+                        <div key={i} className="flex items-center justify-between rounded-xl bg-secondary/30 px-3 py-2">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(h.timestamp).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-foreground font-medium">{h.score}/{h.total}</span>
+                            <span className={cn(
+                              "text-xs font-bold px-2 py-0.5 rounded-lg",
+                              h.pct >= 80 ? "bg-green-500/10 text-green-600" :
+                              h.pct >= 50 ? "bg-primary/10 text-primary" :
+                              "bg-destructive/10 text-destructive"
+                            )}>{h.pct}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {history.length > 1 && (
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>
+                          평균 {Math.round(history.reduce((s, h) => s + h.pct, 0) / history.length)}%
+                          {history[0].pct > history[history.length - 1].pct ? " · 향상 중 📈" : ""}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {genError && (
                   <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive flex items-center gap-2">
