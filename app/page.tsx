@@ -9,8 +9,8 @@ const COPY = {
     nav: { browse: "둘러보기", login: "시작하기" },
     hero: {
       badge: "AI 학습 코치",
-      h1: "지금 상태로 시험 보면\n몇 점 나올까요?",
-      sub: "강의자료를 분석하고, 퀴즈 결과를 바탕으로\n예상 점수와 취약 개념을 알려드립니다.",
+      h1: "강의 PDF를 올리면\nAI가 예상 점수까지\n계산합니다.",
+      sub: "핵심 개념, 취약 개념, 오늘 공부할 내용.\n뭘 해야 할지 모를 때 쓰는 학습 코치.",
       cta: "Google로 무료 시작",
       sub2: "신용카드 없어도 돼 · 월 5회 무료",
     },
@@ -26,26 +26,26 @@ const COPY = {
       strong: ["3-Way Handshake", "IP Routing"],
     },
     value: {
-      title: "기능 말고, 결과로 말할게요",
+      title: "PDF 요약기가 아닙니다",
       items: [
         {
-          bad: "AI가 핵심 개념 정리",
-          good: "80장 슬라이드에서 시험에 나올 핵심만 3분 만에 확인",
-          emoji: "📄",
-        },
-        {
-          bad: "오답노트 자동 저장",
-          good: "틀린 문제는 다시 안 틀리도록 자동 추적",
+          bad: "AI 퀴즈 생성",
+          good: "외운 줄 알았는데 틀리는 개념을 찾아냅니다.",
           emoji: "🎯",
         },
         {
-          bad: "AI 학습 플랜 생성",
-          good: "시험까지 남은 시간 기준으로 오늘 공부해야 할 것만 알려줌",
+          bad: "AI 학습 플랜",
+          good: "시험 전까지 무엇을 공부해야 하는지 알려줍니다.",
           emoji: "📅",
         },
         {
+          bad: "오답노트",
+          good: "틀린 개념을 다시 틀리지 않게 자동 추적합니다.",
+          emoji: "📝",
+        },
+        {
           bad: "시험 점수 예측",
-          good: "퀴즈 결과 + 이해도 데이터로 실제 점수 예측",
+          good: "지금 이 상태로 시험 보면 몇 점 나올지 계산합니다.",
           emoji: "📊",
         },
       ],
@@ -97,8 +97,8 @@ const COPY = {
       name: "— 홍대 컴공 3학년",
     },
     cta2: {
-      title: "오늘 강의자료 하나만 올려보세요",
-      sub: "8초면 핵심 개념, 퀴즈, 예상 점수까지 나옵니다.",
+      title: "첫 PDF를 올려보세요.",
+      sub: "보통 30초 안에\n취약 개념과 예상 점수를 확인할 수 있습니다.",
       btn: "무료로 시작하기",
     },
     footer: "홍대 3학년이 시험기간에 만든 AI 학습 도구",
@@ -108,8 +108,8 @@ const COPY = {
     nav: { browse: "Browse", login: "Get started" },
     hero: {
       badge: "AI Study Coach",
-      h1: "What score would you get\nif you took the exam right now?",
-      sub: "UniMind analyzes your lecture slides, runs you through quizzes,\nand tells you your predicted score and weak spots.",
+      h1: "Upload a lecture PDF.\nGet your predicted\nexam score.",
+      sub: "Key concepts, weak spots, what to study today.\nFor students who don't know where to start.",
       cta: "Start free with Google",
       sub2: "No credit card needed · 5 free analyses/month",
     },
@@ -217,7 +217,7 @@ export default function LandingPage() {
             {lang === "ko" ? "EN" : "KR"}
           </button>
           <Link href="/dashboard" className="hidden md:block">
-            <button className="rounded-xl px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">{t.nav.browse}</button>
+            <button className="rounded-xl px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">내 대시보드 →</button>
           </Link>
           <button onClick={handleLogin} disabled={loading} className="rounded-xl bg-gray-900 px-3 md:px-4 py-1.5 text-sm font-bold text-white hover:bg-gray-700 transition-colors disabled:opacity-50">
             {loading ? t.loading : t.nav.login}

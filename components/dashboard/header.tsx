@@ -103,6 +103,13 @@ export function Header({ title, subtitle }: HeaderProps) {
         </div>
       </div>
 
+      {/* ← UniMind 소개 — 데스크탑만 */}
+      <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+        <a href="/" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+          ← UniMind 소개
+        </a>
+      </div>
+
       <div className="flex items-center gap-3">
         {/* 다크모드 토글 */}
         <Button variant="ghost" size="icon" className="rounded-xl" onClick={toggleDark}>
