@@ -52,8 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  // Pro 여부: user_metadata 또는 Supabase DB로 확인
-  const isPro = user?.user_metadata?.is_pro === true
+  // Pro 여부: 개발자 계정 또는 user_metadata
+  const DEV_EMAILS = ["yunjaehwang@gmail.com"]
+  const isPro = user?.user_metadata?.is_pro === true || DEV_EMAILS.includes(user?.email ?? "")
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, isPro }}>

@@ -20,6 +20,7 @@ import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
 import { AnalysisSkeleton } from "@/components/ui/skeleton"
 import { FadeIn } from "@/components/ui/motion"
+import { STORAGE_KEYS } from "@/lib/storage"
 import { scheduleReview, completeReview, getNextReview } from "@/lib/spaced-repetition"
 import { logEvent, EVENTS } from "@/lib/events"
 import Link from "next/link"
@@ -139,8 +140,11 @@ function AnalysisContent() {
 
   useEffect(() => {
     if (!id) return
-    const saved = localStorage.getItem(`analysis-${id}`)
-    if (saved) { const r = JSON.parse(saved); setResult(r); setNodes(buildNodes(r)); return }
+    // 새 키 먼저, 없으면 옛날 키도 확인 (마이그레이션 호환)
+    const saved = localStorage.getItem(STORAGE_KEYS.analysis(id)) ?? localStorage.getItem(`analysis-${id}`)
+    if (saved) {
+      try { const r = JSON.parse(saved); setResult(r); setNodes(buildNodes(r)); return } catch {}
+    }
     supabase.from('analyses').select('one_liner, summary, flow, concepts, exam_points').eq('id', id).single()
       .then(({ data }) => {
         if (data) {
@@ -152,7 +156,7 @@ function AnalysisContent() {
             examPoints: data.exam_points as string[],
           }
           setResult(r); setNodes(buildNodes(r))
-          localStorage.setItem(`analysis-${id}`, JSON.stringify(r))
+          localStorage.setItem(STORAGE_KEYS.analysis(id), JSON.stringify(r))
         }
       })
   }, [id])
@@ -161,7 +165,7 @@ function AnalysisContent() {
   useEffect(() => {
     if (!id) return
     try {
-      const saved = localStorage.getItem(`concept-understanding-${id}`)
+      const saved = localStorage.getItem(STORAGE_KEYS.conceptUnderstanding(id)) ?? localStorage.getItem(`concept-understanding-${id}`)
       if (saved) setUnderstanding(JSON.parse(saved))
     } catch {}
   }, [id])
