@@ -8,11 +8,11 @@ const COPY = {
   ko: {
     nav: { browse: "둘러보기", login: "시작하기" },
     hero: {
-      badge: "AI 학습 코치",
-      h1: "시험 일주일 전.\n지금 상태로 보면\n몇 점 나올까요?",
-      sub: "강의 PDF를 분석해\n예상 점수, 취약 개념, 오늘 공부할 내용을 알려드립니다.",
-      cta: "Google로 무료 시작",
-      sub2: "신용카드 없어도 돼 · 월 5회 무료",
+      badge: "AI 스코어링 엔진",
+      h1: "공부는 다 한 것 같은데,\n왜 불안할까요?",
+      sub: "100장의 슬라이드 속 숨은 구멍을\nAI가 30초 만에 찾아냅니다.",
+      cta: "무료로 내 점수 진단하기",
+      sub2: "신용카드 불필요 · 월 5회 무료",
     },
     demo: {
       title: "이렇게 나옵니다",
@@ -30,22 +30,22 @@ const COPY = {
       items: [
         {
           bad: "AI 퀴즈 생성",
-          good: "외운 줄 알았는데 틀리는 개념을 찾아냅니다.",
+          good: "인지적 사각지대를 탐지합니다. 외운 줄 알았던 개념부터.",
           emoji: "🎯",
         },
         {
           bad: "AI 학습 플랜",
-          good: "시험 전까지 무엇을 공부해야 하는지 알려줍니다.",
+          good: "시험까지 남은 일수 기준, 오늘 공부할 항목을 계산합니다.",
           emoji: "📅",
         },
         {
           bad: "오답노트",
-          good: "틀린 개념을 다시 틀리지 않게 자동 추적합니다.",
+          good: "실수 패턴을 추적합니다. 같은 개념에서 두 번 틀리지 않도록.",
           emoji: "📝",
         },
         {
           bad: "시험 점수 예측",
-          good: "지금 이 상태로 시험 보면 몇 점 나올지 계산합니다.",
+          good: "현재 이해도를 수치화합니다. 예상 점수와 근거를 함께 제공합니다.",
           emoji: "📊",
         },
       ],
@@ -97,21 +97,21 @@ const COPY = {
       name: "— 홍대 컴공 3학년",
     },
     cta2: {
-      title: "첫 PDF를 올려보세요.",
-      sub: "보통 30초 안에\n취약 개념과 예상 점수를 확인할 수 있습니다.",
-      btn: "무료로 시작하기",
+      title: "지금 바로 진단하세요.",
+      sub: "30초. 취약 개념과 예상 점수가 나옵니다.",
+      btn: "무료로 내 점수 진단하기",
     },
-    footer: "홍대 3학년이 시험기간에 만든 AI 학습 도구",
+    footer: "Data-driven Study Strategy · UniMind",
     loading: "잠깐만요...",
   },
   en: {
     nav: { browse: "Browse", login: "Get started" },
     hero: {
-      badge: "AI Study Coach",
-      h1: "One week before exams.\nWhat score would you get\nright now?",
-      sub: "Upload your lecture PDF.\nGet your predicted score, weak spots, and what to study today.",
-      cta: "Start free with Google",
-      sub2: "No credit card needed · 5 free analyses/month",
+      badge: "AI Scoring Engine",
+      h1: "You studied.\nSo why does it still\nfeel uncertain?",
+      sub: "AI detects the gaps in 100 slides\nin under 30 seconds.",
+      cta: "Diagnose my score for free",
+      sub2: "No credit card · 5 free analyses/month",
     },
     demo: {
       title: "Here's what you get",
