@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { recordQuizComplete, getStreakEmoji } from "@/lib/streak"
 import { logEvent, EVENTS } from "@/lib/events"
 import { STORAGE_KEYS, storageGet, storageSet } from "@/lib/storage"
+import { useWrongNotesStore, useQuizHistoryStore } from "@/lib/store"
 
 interface QuizQuestion {
   type: "ox" | "multiple"
@@ -48,6 +49,8 @@ function QuizContent() {
   const [answers, setAnswers] = useState<boolean[]>([])
   const [streakAfter, setStreakAfter] = useState<{ current: number } | null>(null)
   const [history, setHistory] = useState<any[]>([])
+  const { add: addWrongNotes } = useWrongNotesStore()
+  const { add: addQuizHistory } = useQuizHistoryStore()
 
   // 퀴즈 히스토리 로드
   useEffect(() => {
@@ -143,27 +146,22 @@ function QuizContent() {
           answers: [...answers, selected === questions[current].answer],
           timestamp: Date.now(),
         }
-        const prev = storageGet<any[]>(STORAGE_KEYS.quizHistory, [])
-        storageSet(STORAGE_KEYS.quizHistory, [entry, ...prev].slice(0, 50))
+        addQuizHistory(entry)
 
-        // 오답노트 저장
+        // 오답노트 Zustand로 저장
         const wrongQuestions = questions.filter((_, i) => i < answers.length && !answers[i])
         if (wrongQuestions.length > 0) {
-          const wrongNotes = storageGet<any[]>("wrong-notes", [])
-          wrongQuestions.forEach(q => {
-            wrongNotes.unshift({
-              id: `wrong-${Date.now()}-${Math.random()}`,
-              analysisId: id,
-              fileName: meta.fileName ?? id,
-              question: q.question,
-              answer: q.answer,
-              explanation: q.explanation,
-              type: q.type,
-              conceptName: q.conceptName,
-              timestamp: Date.now(),
-            })
-          })
-          storageSet("wrong-notes", wrongNotes.slice(0, 100))
+          addWrongNotes(wrongQuestions.map(q => ({
+            id: `wrong-${Date.now()}-${Math.random()}`,
+            analysisId: id ?? "",
+            fileName: meta.fileName ?? id ?? "",
+            question: q.question,
+            answer: q.answer,
+            explanation: q.explanation,
+            type: q.type,
+            conceptName: q.conceptName,
+            timestamp: Date.now(),
+          })))
         }
       }
 

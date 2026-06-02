@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Header } from "@/components/dashboard/header"
 import { XCircle, BookOpen, Trash2, ChevronDown, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { storageGet, storageSet } from "@/lib/storage"
+import { useWrongNotesStore } from "@/lib/store"
 
 interface WrongNote {
   id: string
@@ -21,23 +21,11 @@ interface WrongNote {
 }
 
 export default function WrongNotesPage() {
-  const [notes, setNotes] = useState<WrongNote[]>([])
+  const { notes, remove, clear: clearAll } = useWrongNotesStore()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    setNotes(storageGet<WrongNote[]>("wrong-notes", []))
-  }, [])
 
   const toggle = (id: string) =>
     setExpanded(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
-
-  const remove = (id: string) => {
-    const next = notes.filter(n => n.id !== id)
-    setNotes(next)
-    storageSet("wrong-notes", next)
-  }
-
-  const clearAll = () => { setNotes([]); storageSet("wrong-notes", []) }
 
   const byFile = notes.reduce<Record<string, WrongNote[]>>((acc, n) => {
     const key = n.fileName

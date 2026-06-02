@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useSidebar } from "./sidebar-context"
 import { LecturePicker } from "./lecture-picker"
 import { Bell, Search, Calendar as CalendarIcon, FileText, CheckCircle2, Trash2, Menu, Moon, Sun } from "lucide-react"
+import { useThemeStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -43,21 +44,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notifOpen, setNotifOpen] = useState(false)
-  const [dark, setDark] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem("theme")
-    const isDark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    setDark(isDark)
-    document.documentElement.classList.toggle("dark", isDark)
-  }, [])
-
-  const toggleDark = () => {
-    const next = !dark
-    setDark(next)
-    document.documentElement.classList.toggle("dark", next)
-    localStorage.setItem("theme", next ? "dark" : "light")
-  }
+  const { dark, toggleDark } = useThemeStore()
 
   useEffect(() => {
     const load = () => {
