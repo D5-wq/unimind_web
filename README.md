@@ -66,7 +66,7 @@ npm install
 
 ### 2. 환경변수 설정
 
-`.env.local` 파일을 생성하고 아래 값을 입력하세요:
+`.env.local` 파일 생성
 
 ```env
 OPENAI_API_KEY=sk-...
