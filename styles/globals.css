@@ -4,31 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.98 0.003 285);
-  --foreground: oklch(0.15 0.02 285);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.12 0.01 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 285);
+  --card-foreground: oklch(0.12 0.01 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 285);
-  --primary: oklch(0.58 0.22 275);
+  --popover-foreground: oklch(0.12 0.01 285);
+  --primary: oklch(0.55 0.22 275);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0.01 285);
-  --secondary-foreground: oklch(0.25 0.02 285);
-  --muted: oklch(0.94 0.01 285);
-  --muted-foreground: oklch(0.52 0.02 285);
-  --accent: oklch(0.72 0.18 300);
+  --secondary: oklch(0.97 0.004 285);
+  --secondary-foreground: oklch(0.20 0.01 285);
+  --muted: oklch(0.97 0.004 285);
+  --muted-foreground: oklch(0.50 0.01 285);
+  --accent: oklch(0.70 0.18 300);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.01 285);
-  --input: oklch(0.88 0.01 285);
-  --ring: oklch(0.58 0.22 275);
+  --border: oklch(0.92 0.004 285);
+  --input: oklch(0.92 0.004 285);
+  --ring: oklch(0.55 0.22 275);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.18 300);
-  --chart-3: oklch(0.58 0.22 275);
+  --chart-3: oklch(0.55 0.22 275);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.875rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -122,4 +122,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* SaaS 감성 — 카드 그림자 없애고 얇은 보더만 */
+  .shadow-sm { box-shadow: none !important; }
+  .shadow { box-shadow: none !important; }
+  .shadow-md { box-shadow: none !important; }
 }

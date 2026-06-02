@@ -71,17 +71,14 @@ export function Sidebar() {
       open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
     )}>
       {/* 로고 */}
-      <div className="flex h-16 flex-shrink-0 items-center justify-between px-6" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-        <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 border border-white/30">
-            <span className="text-lg">🧠</span>
+      <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-border px-5">
+        <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+            <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-lg font-black text-white">UniMind</h1>
-            <p className="text-xs text-white/70">AI 학습 코치</p>
-          </div>
+          <span className="text-base font-black tracking-tight text-foreground">UniMind</span>
         </Link>
-        <button className="rounded-lg p-1 text-white/70 hover:text-white hover:bg-white/10 md:hidden" onClick={close}>
+        <button className="rounded-lg p-1 text-muted-foreground hover:bg-secondary md:hidden" onClick={close}>
           <X className="h-5 w-5" />
         </button>
       </div>

@@ -205,8 +205,12 @@ export default function LandingPage() {
       {/* 네비 */}
       <nav className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-gray-100 bg-white/90 px-4 md:px-10 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl">🧠</span>
-          <span className="text-lg font-black tracking-tight">UniMind</span>
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600">
+            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <span className="text-lg font-black tracking-tight text-gray-900">UniMind</span>
         </Link>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={() => setLang(l => l === "ko" ? "en" : "ko")} className="rounded-lg px-2 py-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
@@ -449,7 +453,11 @@ export default function LandingPage() {
       {/* 푸터 */}
       <footer className="border-t border-gray-100 px-4 py-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <span className="text-xl">🧠</span>
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-600">
+            <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
           <span className="font-black text-gray-900">UniMind</span>
         </div>
         <p className="text-sm text-gray-400">{t.footer}</p>
