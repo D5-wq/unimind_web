@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [dueCards, setDueCards] = useState<RepCard[]>([])
   const [reviewSummary, setReviewSummary] = useState({ total: 0, dueToday: 0, mastered: 0 })
   const [confusedConcepts, setConfusedConcepts] = useState<{ concept: string; analysisId: string; fileName: string }[]>([])
+  const [heatmap, setHeatmap] = useState<Record<string, number>>({})  // "YYYY-MM-DD" → activity count
 
   // 로컬 analyses 리스트 — context의 allAnalyses를 AnalysisEntry 형태로 변환
   const analyses: AnalysisEntry[] = allAnalyses.map(a => ({
@@ -81,6 +82,23 @@ export default function DashboardPage() {
         })
       setConfusedConcepts(confused.slice(0, 6))
     } catch {}
+
+    // 히트맵 — quiz-history + concept-understanding 날짜 집계
+    try {
+      const map: Record<string, number> = {}
+      const quizHistory = storageGet<any[]>("quiz-history", [])
+      quizHistory.forEach(h => {
+        const d = new Date(h.timestamp).toISOString().slice(0, 10)
+        map[d] = (map[d] ?? 0) + 2
+      })
+      Object.keys(localStorage).filter(k => k.startsWith("concept-understanding-")).forEach(k => {
+        // 오늘 날짜로 count (정확한 날짜 없이)
+        const d = new Date().toISOString().slice(0, 10)
+        map[d] = (map[d] ?? 0) + 1
+      })
+      setHeatmap(map)
+    } catch {}
+
     // 결제 완료 후 리다이렉트
     const url = new URL(window.location.href)
     if (url.searchParams.get("upgraded") === "1") {
@@ -313,6 +331,102 @@ export default function DashboardPage() {
 
           {/* 사이드: 복습 + 일정 + AI 추천 */}
           <div className="space-y-4">
+
+            {/* 시험 직전 모드 — D-3 이하 */}
+            {closestExam && closestExam.dday <= 3 && (
+              <Card className="rounded-2xl border-destructive/30 bg-destructive/5 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🚨</span>
+                    <p className="font-black text-destructive text-sm">
+                      {closestExam.subject} — {closestExam.dday === 0 ? "오늘 시험!" : `D-${closestExam.dday}`}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">새 개념 금지. 취약 개념만 복습하세요.</p>
+                  {confusedConcepts.slice(0, 3).length > 0 && (
+                    <div className="space-y-1.5">
+                      {confusedConcepts.slice(0, 3).map(({ concept, analysisId }) => (
+                        <Link key={concept} href={`/dashboard/analysis?id=${analysisId}`}>
+                          <div className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-1.5 hover:bg-destructive/20 transition-colors">
+                            <div className="h-1.5 w-1.5 rounded-full bg-destructive flex-shrink-0" />
+                            <span className="text-xs font-medium text-destructive truncate">{concept}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 학습 히트맵 */}
+            {Object.keys(heatmap).length > 0 && (
+              <Card className="rounded-2xl border-border shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <span>📅</span> 학습 활동
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const days: string[] = []
+                    for (let i = 27; i >= 0; i--) {
+                      const d = new Date()
+                      d.setDate(d.getDate() - i)
+                      days.push(d.toISOString().slice(0, 10))
+                    }
+                    const max = Math.max(...days.map(d => heatmap[d] ?? 0), 1)
+                    return (
+                      <div className="flex flex-wrap gap-1">
+                        {days.map(d => {
+                          const v = heatmap[d] ?? 0
+                          const intensity = v === 0 ? 0 : Math.ceil((v / max) * 4)
+                          return (
+                            <div
+                              key={d}
+                              title={`${d}: ${v}개 활동`}
+                              className={cn(
+                                "h-4 w-4 rounded-sm transition-colors",
+                                intensity === 0 ? "bg-secondary" :
+                                intensity === 1 ? "bg-primary/20" :
+                                intensity === 2 ? "bg-primary/40" :
+                                intensity === 3 ? "bg-primary/70" :
+                                "bg-primary"
+                              )}
+                            />
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                  <p className="text-xs text-muted-foreground mt-2">최근 28일 학습 기록</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 취약 개념 TOP 5 */}
+            {confusedConcepts.length >= 3 && (
+              <Card className="rounded-2xl border-border shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <span>🎯</span> 이번 학기 최대 적
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1.5">
+                    {confusedConcepts.slice(0, 5).map(({ concept, analysisId }, i) => (
+                      <Link key={concept} href={`/dashboard/analysis?id=${analysisId}`}>
+                        <div className="flex items-center gap-2.5 rounded-xl bg-secondary/30 hover:bg-secondary/60 px-3 py-2 transition-colors">
+                          <span className="text-xs font-black text-muted-foreground w-4">{i + 1}</span>
+                          <span className="text-xs font-medium text-foreground flex-1 truncate">{concept}</span>
+                          <span className="text-orange-500 text-xs">→</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 오늘 복습 카드 */}
             {reviewSummary.total > 0 && (
