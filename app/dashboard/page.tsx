@@ -135,22 +135,40 @@ export default function DashboardPage() {
     })
     const checked = understood + confused
     if (checked === 0) return null
-    return Math.round((understood / checked) * 85 + 10)
+    // 최소 30점 보장 — 개념 체크를 시작한 이상 0점은 말이 안 됨
+    const raw = Math.round((understood / checked) * 65 + 30)
+    return Math.max(30, Math.min(99, raw))
   })()
 
   const stats = [
     {
-      title: avgScore ? "예상 평균 점수" : "분석한 강의",
-      value: avgScore ? `${avgScore}점` : String(analyses.length),
-      icon: avgScore ? Target : BookOpen,
-      color: avgScore ? (avgScore >= 80 ? "text-green-500" : avgScore >= 65 ? "text-primary" : "text-destructive") : "text-primary",
-      bg: avgScore ? (avgScore >= 80 ? "bg-green-500/10" : avgScore >= 65 ? "bg-primary/10" : "bg-destructive/10") : "bg-primary/10",
+      title: "예상 평균 점수",
+      value: avgScore ? `${avgScore}점` : "—",
+      sub: avgScore ? (avgScore >= 80 ? "잘 하고 있어요" : avgScore >= 65 ? "보통 수준" : "복습 필요") : "개념 체크 후 계산",
+      icon: Target,
+      color: avgScore ? (avgScore >= 80 ? "text-green-500" : avgScore >= 65 ? "text-primary" : "text-destructive") : "text-muted-foreground",
+      bg: avgScore ? (avgScore >= 80 ? "bg-green-500/10" : avgScore >= 65 ? "bg-primary/10" : "bg-destructive/10") : "bg-secondary",
     },
-    { title: "헷갈리는 개념", value: `${confusedConcepts.length}개`, icon: Brain, color: confusedConcepts.length > 5 ? "text-destructive" : "text-orange-500", bg: confusedConcepts.length > 5 ? "bg-destructive/10" : "bg-orange-500/10" },
-    { title: "분석한 강의", value: String(analyses.length), icon: BookOpen, color: "text-chart-3", bg: "bg-chart-3/10" },
     {
-      title: closestExam ? closestExam.subject : "D-Day",
-      value: closestExam ? (closestExam.dday === 0 ? "D-Day!" : `D-${closestExam.dday}`) : "-",
+      title: "위험 과목",
+      value: avgScore && avgScore < 65 ? "있음" : "없음",
+      sub: confusedConcepts.length > 0 ? `취약 개념 ${confusedConcepts.length}개` : "모두 양호",
+      icon: Brain,
+      color: confusedConcepts.length > 5 ? "text-destructive" : "text-orange-500",
+      bg: confusedConcepts.length > 5 ? "bg-destructive/10" : "bg-orange-500/10",
+    },
+    {
+      title: "분석한 강의",
+      value: String(analyses.length),
+      sub: analyses.length === 0 ? "아직 없음" : `${analyses.length}개 분석 완료`,
+      icon: BookOpen,
+      color: "text-primary",
+      bg: "bg-primary/10",
+    },
+    {
+      title: closestExam ? `${closestExam.subject} 시험` : "시험 일정",
+      value: closestExam ? (closestExam.dday === 0 ? "D-Day!" : `D-${closestExam.dday}`) : "없음",
+      sub: closestExam && closestExam.dday <= 3 ? "🚨 임박!" : closestExam ? closestExam.date : "플래너에서 추가",
       icon: Calendar,
       color: closestExam && closestExam.dday <= 7 ? "text-destructive" : "text-chart-4",
       bg: closestExam && closestExam.dday <= 7 ? "bg-destructive/10" : "bg-chart-4/10",
@@ -266,6 +284,9 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">{stat.title}</p>
                     <p className="mt-1 text-2xl font-bold text-foreground">{stat.value}</p>
+                    {'sub' in stat && stat.sub && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{(stat as any).sub}</p>
+                    )}
                   </div>
                   <div className={cn("rounded-xl p-3", stat.bg)}>
                     <stat.icon className={cn("h-6 w-6", stat.color)} />

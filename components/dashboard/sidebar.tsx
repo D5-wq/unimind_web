@@ -15,24 +15,45 @@ import { getStreak, getStreakEmoji } from "@/lib/streak"
 import { FREE_ANALYSIS_LIMIT as FAL, getUsageCount as GUC } from "@/lib/stripe"
 import { getDueCards } from "@/lib/spaced-repetition"
 
-const navigation = [
-  { name: "홈", href: "/dashboard", icon: Home, exact: true },
-  { name: "강의 목록", href: "/dashboard/courses", icon: LayoutList },
-  { name: "자료 업로드", href: "/dashboard/upload", icon: Upload },
-  { name: "분석 결과", href: "/dashboard/analysis", icon: FileText },
-  { name: "학습 플래너", href: "/dashboard/planner", icon: GraduationCap },
-  { name: "일정", href: "/dashboard/calendar", icon: Calendar },
-  { name: "AI 채팅", href: "/dashboard/chat", icon: MessageSquare },
-  { name: "학습 노트", href: "/dashboard/notes", icon: StickyNote },
-  { name: "개념 맵", href: "/dashboard/concept-map", icon: Network },
-  { name: "시험 준비", href: "/dashboard/exam", icon: BookOpenCheck },
-  { name: "퀴즈", href: "/dashboard/quiz", icon: Target },
-  { name: "오답노트", href: "/dashboard/wrong-notes", icon: XCircle },
-  { name: "지식 그래프", href: "/dashboard/knowledge", icon: Network },
-  { name: "요금제", href: "/dashboard/pricing", icon: Crown },
+const navGroups = [
+  {
+    label: null,
+    items: [
+      { name: "홈", href: "/dashboard", icon: Home, exact: true },
+    ],
+  },
+  {
+    label: "학습",
+    items: [
+      { name: "강의", href: "/dashboard/courses", icon: LayoutList },
+      { name: "업로드", href: "/dashboard/upload", icon: Upload },
+      { name: "퀴즈", href: "/dashboard/quiz", icon: Target },
+      { name: "오답노트", href: "/dashboard/wrong-notes", icon: XCircle },
+      { name: "학습 노트", href: "/dashboard/notes", icon: StickyNote },
+    ],
+  },
+  {
+    label: "분석",
+    items: [
+      { name: "분석 결과", href: "/dashboard/analysis", icon: FileText },
+      { name: "지식 그래프", href: "/dashboard/knowledge", icon: Network },
+      { name: "시험 준비", href: "/dashboard/exam", icon: BookOpenCheck },
+    ],
+  },
+  {
+    label: "도구",
+    items: [
+      { name: "플래너", href: "/dashboard/planner", icon: GraduationCap },
+      { name: "일정", href: "/dashboard/calendar", icon: Calendar },
+      { name: "AI 채팅", href: "/dashboard/chat", icon: MessageSquare },
+    ],
+  },
 ]
 
+const navigation = navGroups.flatMap(g => g.items)
+
 const bottomNav = [
+  { name: "요금제", href: "/dashboard/pricing", icon: Crown },
   { name: "설정", href: "/dashboard/settings", icon: Settings },
 ]
 
@@ -112,31 +133,38 @@ export function Sidebar() {
       )}
 
       {/* 네비게이션 */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">메뉴</p>
-        <div className="space-y-0.5">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                isActive(item)
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
-              <span className="flex-1">{item.name}</span>
-              {/* 복습 대기 뱃지 */}
-              {item.href === "/dashboard" && dueCount > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
-                  {dueCount > 9 ? "9+" : dueCount}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+        {navGroups.map((group) => (
+          <div key={group.label ?? "home"}>
+            {group.label && (
+              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
+                    isActive(item)
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-[17px] w-[17px] flex-shrink-0" />
+                  <span className="flex-1">{item.name}</span>
+                  {item.href === "/dashboard" && dueCount > 0 && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                      {dueCount > 9 ? "9+" : dueCount}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
 
         {/* 사용량 & 업그레이드 */}
         {!isPro && (
