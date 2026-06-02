@@ -1,138 +1,121 @@
-# UniMind — AI 강의 학습 어시스턴트
+# UniMind 🧠
 
-> 강의 자료(PDF/PPTX)를 업로드하면 AI가 핵심 개념을 정리하고 시험을 대비해주는 대학생 맞춤 학습 도우미
+시험 전날 슬라이드 80장 다시 읽다가 지쳐서 만들었습니다.
 
-**🔗 라이브 데모: [unimind-web.vercel.app](https://unimind-web.vercel.app)**
+**강의 PDF 올리면 AI가 핵심 개념 정리하고, 퀴즈 만들어주고, 지금 이해도면 시험 몇 점 나올지 알려줘요.**
+
+🔗 **[unimind-web.vercel.app](https://unimind-web.vercel.app)**
 
 ---
 
-## 주요 기능
+## 뭐가 되냐면
 
-| 기능 | 설명 |
-|------|------|
-| **AI 강의 분석** | PDF/PPTX 업로드 → GPT-4o-mini가 핵심 개념, 강의 흐름, 시험 포인트 자동 추출 |
-| **분석 결과 5탭** | 개요 / 핵심 개념 / 개념 맵 / 타임라인 / 요약 |
-| **AI 채팅** | 강의 컨텍스트 기반으로 질문하면 맥락을 이해하고 답변 |
-| **학습 플래너** | D-Day 시험 카운트다운, 주간 학습 목표 체크리스트 |
-| **학습 노트** | 태그 기반 노트 에디터, 강의별 정리 |
-| **일정 캘린더** | 월별 캘린더에 시험/과제 일정 등록 및 관리 |
-| **개념 맵** | 강의 핵심 개념을 SVG 노드 그래프로 시각화 |
-| **알림 시스템** | 분석 완료 시 헤더 알림, 클릭 시 결과 페이지 이동 |
+- PDF/PPTX 올리면 핵심 개념 자동 정리
+- AI가 OX, 4지선다 퀴즈 자동 생성
+- 헷갈리는 개념 바로 AI한테 질문 가능
+- 이해도 체크하면 시험 예상 점수 계산
+- 틀린 문제 오답노트 자동 저장
+- 시험 일정 등록하면 오늘 뭐 공부해야 하는지 AI가 플랜 짜줌
+- 매일 퀴즈 풀면 스트릭 쌓임
 
 ---
 
 ## 기술 스택
 
-**Frontend**
-- Next.js 16 (App Router) + TypeScript
-- Tailwind CSS v4
-- shadcn/ui + Radix UI
-- Lucide React
-
-**Backend / AI**
-- OpenAI GPT-4o-mini — 강의 분석
-- `unpdf` — PDF 텍스트 추출
-- `jszip` — PPTX 파싱 (slide XML)
-
-**Database**
-- Supabase (PostgreSQL) — 분석 결과 클라우드 저장
-
----
-
-## 아키텍처 흐름
-
 ```
-사용자 PDF 업로드
-    ↓
-/api/analyze (Next.js Route Handler)
-    ├── unpdf / jszip → 텍스트 추출
-    ├── OpenAI GPT-4o-mini → JSON 분석 결과
-    └── Supabase → analyses 테이블 저장
-    ↓
-분석 결과 반환 (oneLiner, flow, concepts, examPoints, supabaseId)
-    ↓
-클라이언트: localStorage 캐시 + Supabase UUID 기반 라우팅
+Next.js 16 (App Router) + TypeScript
+Tailwind CSS v4 + shadcn/ui
+OpenAI GPT-4o-mini
+Supabase (PostgreSQL + Auth)
+Zustand (전역 상태)
+TanStack Query (서버 상태 캐싱)
+Stripe (결제)
+Vercel (배포)
 ```
 
 ---
 
 ## 로컬 실행
 
-### 1. 의존성 설치
-
 ```bash
 npm install
 ```
 
-### 2. 환경변수 설정
-
-`.env.local` 파일 생성
+`.env.local` 만들고:
 
 ```env
 OPENAI_API_KEY=sk-...
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+STRIPE_SECRET_KEY=sk_...
+STRIPE_PRO_PRICE_ID=price_...
+ADMIN_PASSWORD=...
 ```
 
-### 3. Supabase 테이블 생성
+```bash
+npm run dev
+```
 
-Supabase SQL Editor에서 실행:
+---
+
+## DB 테이블 (Supabase)
 
 ```sql
 create table analyses (
   id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users,
   file_name   text not null,
   one_liner   text,
+  summary     text,
   flow        jsonb,
   concepts    jsonb,
   exam_points jsonb,
   created_at  timestamptz default now()
 );
 
-alter table analyses disable row level security;
+create table concept_understanding (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid,
+  analysis_id  text,
+  concept_name text not null,
+  course_name  text,
+  file_name    text,
+  status       text check (status in ('understood', 'confused')),
+  created_at   timestamptz default now()
+);
+
+create table events (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid,
+  event_name  text not null,
+  metadata    jsonb,
+  created_at  timestamptz default now()
+);
 ```
-
-### 4. 개발 서버 실행
-
-```bash
-npm run dev
-```
-
-`http://localhost:3000` 접속
 
 ---
 
 ## 페이지 구조
 
 ```
-/                       온보딩 랜딩 페이지
-/dashboard              홈 대시보드 (통계, 일정, AI 추천)
-/dashboard/courses      강의 목록 관리
-/dashboard/upload       PDF/PPTX 업로드 및 AI 분석
-/dashboard/analysis     분석 결과 (5탭)
-/dashboard/chat         AI 채팅 Q&A
-/dashboard/exam         시험 준비 (체크리스트, 예상 포인트)
-/dashboard/planner      학습 플래너 (D-Day, 주간 목표)
-/dashboard/notes        학습 노트 에디터
-/dashboard/calendar     월별 일정 캘린더
-/dashboard/concept-map  개념 맵 시각화
-/dashboard/settings     프로필 및 설정
+/                       랜딩
+/dashboard              홈 (통계, 복습 배너, 일정)
+/dashboard/upload       PDF/PPTX 업로드
+/dashboard/analysis     분석 결과 (개요/개념/맵/타임라인/요약)
+/dashboard/quiz         AI 퀴즈
+/dashboard/wrong-notes  오답노트
+/dashboard/knowledge    지식 그래프 + 시험 예측
+/dashboard/planner      AI 학습 플랜
+/dashboard/chat         AI 채팅
+/dashboard/calendar     일정 캘린더
+/dashboard/notes        학습 노트
+/dashboard/exam         시험 준비
+/dashboard/settings     설정
+/admin                  관리자 (KPI, 퍼널)
 ```
 
 ---
 
-## 향후 계획
+## 만든 사람
 
-- [ ] Supabase Auth 로그인 / 회원가입
-- [ ] 로그인 기반 데이터 완전 클라우드화 (강의, 노트, 플래너)
-- [ ] Vercel 배포
-- [ ] 강의별 분석 히스토리 관리
-- [ ] 모바일 반응형 최적화
-
----
-
-## 개발 환경
-
-- Node.js 18+
-- Next.js 16.2.6
-- TypeScript 5.7.3
+홍대 컴공 3학년. 시험 전날 밤새다가 만들었습니다.
