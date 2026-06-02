@@ -8,185 +8,171 @@ const COPY = {
   ko: {
     nav: { browse: "둘러보기", login: "시작하기" },
     hero: {
-      badge: "대학생이 직접 만든 AI 학습 도구",
-      h1: ["시험 전날", "밤새는 거", "그만해도 돼"],
-      sub: "강의 PDF 올리면 AI가 핵심 개념 정리하고, 퀴즈 만들어주고, 지금 상태면 시험 몇 점 나올지도 알려줘.",
+      badge: "AI 학습 코치",
+      h1: "지금 상태로 시험 보면\n몇 점 나올까요?",
+      sub: "강의자료를 분석하고, 퀴즈 결과를 바탕으로\n예상 점수와 취약 개념을 알려드립니다.",
       cta: "Google로 무료 시작",
       sub2: "신용카드 없어도 돼 · 월 5회 무료",
     },
+    demo: {
+      title: "이렇게 나옵니다",
+      filename: "컴퓨터네트워크_7주차.pdf",
+      stats: [{ label: "분석 시간", value: "35초" }, { label: "핵심 개념", value: "12개" }, { label: "퀴즈", value: "40문제" }],
+      score: "72점",
+      score_label: "예상 점수",
+      weak_label: "집중 공부 필요",
+      weak: ["Congestion Control", "TCP Flow Control", "DNS Resolution"],
+      strong_label: "잘 하고 있어요",
+      strong: ["3-Way Handshake", "IP Routing"],
+    },
+    value: {
+      title: "기능 말고, 결과로 말할게요",
+      items: [
+        {
+          bad: "AI가 핵심 개념 정리",
+          good: "80장 슬라이드에서 시험에 나올 핵심만 3분 만에 확인",
+          emoji: "📄",
+        },
+        {
+          bad: "오답노트 자동 저장",
+          good: "틀린 문제는 다시 안 틀리도록 자동 추적",
+          emoji: "🎯",
+        },
+        {
+          bad: "AI 학습 플랜 생성",
+          good: "시험까지 남은 시간 기준으로 오늘 공부해야 할 것만 알려줌",
+          emoji: "📅",
+        },
+        {
+          bad: "시험 점수 예측",
+          good: "퀴즈 결과 + 이해도 데이터로 실제 점수 예측",
+          emoji: "📊",
+        },
+      ],
+    },
     before_after: {
-      title: "이전이랑 이후가 진짜 달라요",
+      title: "달라지는 시험 준비",
       before: {
-        label: "BEFORE",
+        label: "지금까지",
         items: [
-          "교수님 PPT 80장 처음부터 다시 읽기",
-          "뭐가 중요한지 모르는 채로 밑줄",
-          "시험 전날 밤 12시에 시작",
+          "슬라이드 100장 처음부터 다시 읽기",
+          "뭐가 중요한지 모른 채로 밑줄",
+          "외웠다고 생각했는데 시험에서 틀리기",
           "어디서 문제 나올지 감도 없음",
         ],
       },
       after: {
-        label: "AFTER",
+        label: "UniMind로",
         items: [
-          "PDF 올리면 핵심 개념 7개 자동 추출",
-          "AI가 OX, 4지선다 퀴즈 즉시 생성",
-          "틀린 문제 오답노트에 자동 저장",
-          "시험 예상 점수까지 계산해줌",
+          "PDF 올리면 핵심 개념 자동 추출",
+          "AI 퀴즈로 진짜 이해도 확인",
+          "취약 개념만 집중 복습",
+          "예상 점수 보고 전략적으로 준비",
         ],
       },
     },
-    stats: [
-      { value: "8초", label: "평균 분석 시간" },
-      { value: "5개+", label: "기능" },
-      { value: "무료", label: "기본 플랜" },
-      { value: "100%", label: "AI 기반" },
-    ],
-    how: {
-      title: "이렇게 씁니다",
-      steps: [
-        { num: "01", emoji: "📄", title: "PDF 올리기", desc: "강의 자료 파일 하나 드래그하면 끝. 8초면 분석 완료." },
-        { num: "02", emoji: "🧠", title: "AI가 정리", desc: "핵심 개념, 강의 흐름, 시험 포인트 자동으로 뽑아줌." },
-        { num: "03", emoji: "🎯", title: "퀴즈로 확인", desc: "AI가 만든 OX, 4지선다 문제로 내 이해도 체크." },
-        { num: "04", emoji: "📊", title: "점수 예측", desc: "지금 이해도면 실제 시험에서 몇 점 나올지 계산." },
-      ],
-    },
     testimonials: {
-      title: "실제로 쓴 사람들 얘기",
+      title: "실제로 쓴 사람들",
       items: [
         {
-          text: "네트워크 중간고사 전날에 썼는데, 뭘 공부해야 할지 바로 알 수 있었어요. 교수님 슬라이드 70장을 30분 만에 정리한 느낌.",
+          text: "네트워크 중간고사 전날에 썼는데 뭘 공부해야 할지 바로 알 수 있었어요. 교수님 슬라이드 70장을 30분 만에 정리한 느낌.",
           name: "이○○",
           info: "컴공 3학년",
-          emoji: "💬",
-        },
-        {
-          text: "오답노트 자동으로 쌓이는 게 진짜 좋아요. 퀴즈 틀린 거 나중에 몰아서 다시 볼 수 있으니까.",
-          name: "박○○",
-          info: "전자공학 2학년",
-          emoji: "💬",
         },
         {
           text: "시험 예상 점수 기능이 신기했어요. 처음엔 반신반의했는데 실제 시험이랑 비슷하게 나와서 놀랐음.",
           name: "김○○",
           info: "경영학 4학년",
-          emoji: "💬",
+        },
+        {
+          text: "오답노트 자동으로 쌓이는 게 진짜 좋아요. 퀴즈 틀린 거 나중에 몰아서 다시 볼 수 있으니까.",
+          name: "박○○",
+          info: "전자공학 2학년",
         },
       ],
     },
-    features: {
-      title: "이런 것도 됩니다",
-      items: [
-        { emoji: "🔗", title: "분석 결과 공유", desc: "링크 하나로 친구한테 공유 가능. '야 이 과목 분석한거 봐'" },
-        { emoji: "📅", title: "AI 학습 플랜", desc: "시험 날짜 입력하면 오늘부터 D-day까지 공부 계획 자동 생성" },
-        { emoji: "🧩", title: "지식 그래프", desc: "여러 강의 개념들이 어떻게 연결되는지 시각화" },
-        { emoji: "💾", title: "오답노트", desc: "틀린 문제 자동 저장. 나중에 몰아서 복습 가능" },
-        { emoji: "🔥", title: "스트릭", desc: "매일 퀴즈 풀면 스트릭 쌓임. 게임처럼 하다보면 습관이 됨" },
-        { emoji: "📱", title: "모바일 지원", desc: "폰에서도 써도 됨. 강의실에서 바로 업로드 가능" },
-      ],
-    },
     story: {
-      title: "왜 만들었냐면",
-      body: "저도 매번 시험 전날 슬라이드 80장 다시 읽다가 지쳐서 만들었어요.\n어차피 AI가 요약해줄 수 있는데 왜 직접 읽고 있냐 싶어서.",
+      q: "왜 만들었냐면",
+      a: "시험기간마다 슬라이드 100장 읽고, 뭐가 중요한지 모르고, 외웠다고 생각했는데 틀리는 걸 반복했어요.\n\"AI가 대신 분석해주면 안 되나?\" 에서 시작했습니다.",
       name: "— 홍대 컴공 3학년",
     },
     cta2: {
-      title: "기말 전에 한 번만 써봐요",
-      sub: "어차피 공부해야 하는데, 더 빠르게 하면 되잖아요.",
+      title: "오늘 강의자료 하나만 올려보세요",
+      sub: "8초면 핵심 개념, 퀴즈, 예상 점수까지 나옵니다.",
       btn: "무료로 시작하기",
     },
-    footer: "홍대 3학년이 만든 AI 학습 도구",
+    footer: "홍대 3학년이 시험기간에 만든 AI 학습 도구",
     loading: "잠깐만요...",
   },
   en: {
     nav: { browse: "Browse", login: "Get started" },
     hero: {
-      badge: "Built by a college student, for college students",
-      h1: ["Stop pulling", "all-nighters", "before exams"],
-      sub: "Upload your lecture PDF → AI extracts key concepts → generates quizzes → predicts your exam score.",
+      badge: "AI Study Coach",
+      h1: "What score would you get\nif you took the exam right now?",
+      sub: "UniMind analyzes your lecture slides, runs you through quizzes,\nand tells you your predicted score and weak spots.",
       cta: "Start free with Google",
       sub2: "No credit card needed · 5 free analyses/month",
     },
+    demo: {
+      title: "Here's what you get",
+      filename: "computer_networks_week7.pdf",
+      stats: [{ label: "Analysis time", value: "35s" }, { label: "Key concepts", value: "12" }, { label: "Quiz questions", value: "40" }],
+      score: "72",
+      score_label: "Predicted score",
+      weak_label: "Needs work",
+      weak: ["Congestion Control", "TCP Flow Control", "DNS Resolution"],
+      strong_label: "Looking good",
+      strong: ["3-Way Handshake", "IP Routing"],
+    },
+    value: {
+      title: "Not features. Results.",
+      items: [
+        { bad: "AI extracts key concepts", good: "See only what matters from 80 slides — in 3 minutes", emoji: "📄" },
+        { bad: "Auto-save wrong answers", good: "Track every mistake so you never repeat it", emoji: "🎯" },
+        { bad: "AI study plan", good: "Know exactly what to study today based on your exam date", emoji: "📅" },
+        { bad: "Exam score prediction", good: "Real score estimate from quiz results and comprehension data", emoji: "📊" },
+      ],
+    },
     before_after: {
-      title: "The difference is real",
+      title: "A different way to prepare",
       before: {
-        label: "BEFORE",
+        label: "Without UniMind",
         items: [
-          "Re-reading 80 slides from the start",
+          "Re-reading 100 slides from scratch",
           "Highlighting without knowing what matters",
-          "Starting at midnight before the exam",
-          "No idea where questions will come from",
+          "Thinking you knew it, then getting it wrong",
+          "No idea where exam questions come from",
         ],
       },
       after: {
-        label: "AFTER",
+        label: "With UniMind",
         items: [
-          "Upload PDF → 7 key concepts extracted automatically",
-          "AI generates OX and multiple-choice quizzes instantly",
-          "Wrong answers saved to mistake log automatically",
-          "Predicted exam score calculated for you",
+          "Upload PDF → key concepts extracted instantly",
+          "AI quizzes reveal what you actually know",
+          "Focus only on weak spots",
+          "Know your predicted score before the exam",
         ],
       },
     },
-    stats: [
-      { value: "8s", label: "Avg. analysis time" },
-      { value: "5+", label: "Features" },
-      { value: "Free", label: "Basic plan" },
-      { value: "100%", label: "AI powered" },
-    ],
-    how: {
-      title: "How it works",
-      steps: [
-        { num: "01", emoji: "📄", title: "Upload PDF", desc: "Drag and drop your lecture file. Done in 8 seconds." },
-        { num: "02", emoji: "🧠", title: "AI analyzes", desc: "Key concepts, lecture flow, and exam points extracted automatically." },
-        { num: "03", emoji: "🎯", title: "Take a quiz", desc: "AI-generated OX and multiple choice questions to test your understanding." },
-        { num: "04", emoji: "📊", title: "Score prediction", desc: "See what score you'd likely get on the actual exam right now." },
-      ],
-    },
     testimonials: {
-      title: "From people who actually used it",
+      title: "From people who used it",
       items: [
-        {
-          text: "Used it the night before my networks midterm. Instantly knew what to focus on. It felt like summarizing 70 slides in 30 minutes.",
-          name: "L.J.",
-          info: "CS junior",
-          emoji: "💬",
-        },
-        {
-          text: "The automatic mistake log is genuinely useful. I can review all my wrong answers later in one go.",
-          name: "P.S.",
-          info: "EE sophomore",
-          emoji: "💬",
-        },
-        {
-          text: "The score prediction feature surprised me — it was actually close to my real score. Kind of scary how accurate it was.",
-          name: "K.M.",
-          info: "Business senior",
-          emoji: "💬",
-        },
-      ],
-    },
-    features: {
-      title: "More things it can do",
-      items: [
-        { emoji: "🔗", title: "Share results", desc: "One link to share your analysis with friends." },
-        { emoji: "📅", title: "AI study plan", desc: "Enter exam date → auto-generates daily study plan up to D-day." },
-        { emoji: "🧩", title: "Knowledge graph", desc: "Visualize how concepts across lectures connect to each other." },
-        { emoji: "💾", title: "Mistake log", desc: "Wrong answers saved automatically. Review them all later." },
-        { emoji: "🔥", title: "Streaks", desc: "Daily quiz streaks. Feels like a game, works like studying." },
-        { emoji: "📱", title: "Mobile", desc: "Works on phone too. Upload right from the classroom." },
+        { text: "Used it the night before my networks midterm. Instantly knew what to focus on. It felt like summarizing 70 slides in 30 minutes.", name: "L.J.", info: "CS junior" },
+        { text: "The score prediction surprised me — it was actually close to my real exam score. Kind of scary how accurate it was.", name: "K.M.", info: "Business senior" },
+        { text: "The automatic mistake log is genuinely useful. I can review all my wrong answers in one go later.", name: "P.S.", info: "EE sophomore" },
       ],
     },
     story: {
-      title: "Why I built this",
-      body: "I was tired of re-reading 80 slides the night before every exam.\nIf AI can summarize it, why am I still doing it manually?",
+      q: "Why I built this",
+      a: "Every exam season: re-read 100 slides, not know what's important, think I knew it, get it wrong anyway.\n\"Can't AI just analyze this for me?\" — that's where it started.",
       name: "— CS junior, Hongik University",
     },
     cta2: {
-      title: "Try it before finals",
-      sub: "You're going to study anyway. Might as well be faster about it.",
+      title: "Upload one lecture file today",
+      sub: "8 seconds to key concepts, quizzes, and a predicted score.",
       btn: "Get started free",
     },
-    footer: "Built by a college junior at Hongik University",
+    footer: "Built during finals week by a CS junior at Hongik University",
     loading: "Loading...",
   },
 }
@@ -220,16 +206,14 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-gray-100 bg-white/90 px-4 md:px-10 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl">🧠</span>
-          <span className="text-lg font-black tracking-tight text-gray-900">UniMind</span>
+          <span className="text-lg font-black tracking-tight">UniMind</span>
         </Link>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={() => setLang(l => l === "ko" ? "en" : "ko")} className="rounded-lg px-2 py-1 text-xs md:text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={() => setLang(l => l === "ko" ? "en" : "ko")} className="rounded-lg px-2 py-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
             {lang === "ko" ? "EN" : "KR"}
           </button>
           <Link href="/dashboard" className="hidden md:block">
-            <button className="rounded-xl px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
-              {t.nav.browse}
-            </button>
+            <button className="rounded-xl px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">{t.nav.browse}</button>
           </Link>
           <button onClick={handleLogin} disabled={loading} className="rounded-xl bg-gray-900 px-3 md:px-4 py-1.5 text-sm font-bold text-white hover:bg-gray-700 transition-colors disabled:opacity-50">
             {loading ? t.loading : t.nav.login}
@@ -238,95 +222,131 @@ export default function LandingPage() {
       </nav>
 
       {/* 히어로 */}
-      <section className="mx-auto max-w-5xl px-4 md:px-6 pt-16 md:pt-24 pb-12 md:pb-16">
-        <div className="mb-5 inline-block rounded-full border border-purple-200 bg-purple-50 px-3 md:px-4 py-1.5 text-xs md:text-sm font-medium text-purple-700">
+      <section className="mx-auto max-w-5xl px-4 md:px-6 pt-16 md:pt-24 pb-12">
+        <div className="mb-5 inline-block rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700">
           {t.hero.badge}
         </div>
-        <h1 className="mb-6 text-4xl md:text-7xl font-black leading-[1.05] tracking-tighter text-gray-900">
-          {t.hero.h1.map((line, i) => (
-            <span key={i} className={`block ${i === 1 ? "text-purple-600" : ""}`}>{line}</span>
-          ))}
+        <h1 className="mb-6 text-4xl md:text-6xl font-black leading-tight tracking-tighter text-gray-900 whitespace-pre-line">
+          {t.hero.h1}
         </h1>
-        <p className="mb-8 max-w-xl text-base md:text-lg text-gray-500 leading-relaxed">{t.hero.sub}</p>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <button onClick={handleLogin} disabled={loading} className="flex items-center justify-center gap-3 rounded-2xl bg-gray-900 px-6 md:px-7 py-4 text-base font-bold text-white shadow-lg hover:bg-gray-700 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+        <p className="mb-8 max-w-lg text-base md:text-lg text-gray-500 leading-relaxed whitespace-pre-line">
+          {t.hero.sub}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button onClick={handleLogin} disabled={loading} className="flex items-center justify-center gap-3 rounded-2xl bg-gray-900 px-7 py-4 text-base font-bold text-white shadow-lg hover:bg-gray-700 transition-all hover:-translate-y-0.5 disabled:opacity-50">
             <GoogleIcon />
             {loading ? t.loading : t.hero.cta}
           </button>
           <Link href="/dashboard" className="flex">
-            <button className="flex-1 rounded-2xl border-2 border-gray-200 px-6 md:px-7 py-4 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all">
+            <button className="flex-1 rounded-2xl border-2 border-gray-200 px-7 py-4 text-base font-medium text-gray-600 hover:bg-gray-50 transition-all">
               {t.nav.browse} →
             </button>
           </Link>
         </div>
-        <p className="mt-3 text-xs md:text-sm text-gray-400">{t.hero.sub2}</p>
+        <p className="mt-3 text-xs text-gray-400">{t.hero.sub2}</p>
         <a href="https://www.producthunt.com/posts/unimind-2" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block">
           <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=unimind-2&theme=light" alt="UniMind on Product Hunt" style={{ width: 180, height: 39 }} />
         </a>
       </section>
 
-      {/* 통계 바 */}
-      <section className="border-y border-gray-100 bg-gray-50 px-4 py-8">
-        <div className="mx-auto max-w-3xl grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {t.stats.map(({ value, label }) => (
-            <div key={label}>
-              <p className="text-2xl md:text-3xl font-black text-purple-600">{value}</p>
-              <p className="text-xs md:text-sm text-gray-400 mt-0.5">{label}</p>
+      {/* 실제 결과 데모 */}
+      <section className="bg-gray-50 border-y border-gray-100 px-4 md:px-6 py-14 md:py-16">
+        <div className="mx-auto max-w-3xl">
+          <p className="mb-6 text-sm font-bold uppercase tracking-widest text-purple-500">{t.demo.title}</p>
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-md overflow-hidden">
+            {/* 파일 헤더 */}
+            <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
+              <span className="text-lg">📄</span>
+              <span className="text-sm font-medium text-gray-600">{t.demo.filename}</span>
+              <span className="ml-auto rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-bold text-green-600">분석 완료</span>
+            </div>
+            <div className="p-5 md:p-6">
+              {/* 통계 */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {t.demo.stats.map(({ label, value }) => (
+                  <div key={label} className="rounded-xl bg-gray-50 p-3 text-center">
+                    <p className="text-xl md:text-2xl font-black text-gray-900">{value}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+              {/* 점수 예측 */}
+              <div className="mb-4 flex items-center gap-4 rounded-2xl bg-purple-50 border border-purple-100 p-4">
+                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white">
+                  <div className="text-center">
+                    <p className="text-2xl font-black">{t.demo.score}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-purple-500 font-medium mb-0.5">{t.demo.score_label}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">지금 이해도 기준으로 계산한 예상 점수예요</p>
+                </div>
+              </div>
+              {/* 취약 개념 */}
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="rounded-xl border border-red-100 bg-red-50 p-3">
+                  <p className="text-xs font-bold text-red-500 mb-2">{t.demo.weak_label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.demo.weak.map(w => (
+                      <span key={w} className="rounded-lg bg-red-100 text-red-600 text-xs px-2 py-0.5 font-medium">{w}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-green-100 bg-green-50 p-3">
+                  <p className="text-xs font-bold text-green-600 mb-2">{t.demo.strong_label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.demo.strong.map(s => (
+                      <span key={s} className="rounded-lg bg-green-100 text-green-600 text-xs px-2 py-0.5 font-medium">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 기능 말고 결과 */}
+      <section className="mx-auto max-w-5xl px-4 md:px-6 py-16 md:py-20">
+        <h2 className="mb-10 text-2xl md:text-3xl font-black text-gray-900">{t.value.title}</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          {t.value.items.map(({ bad, good, emoji }) => (
+            <div key={bad} className="rounded-2xl border border-gray-100 p-5 hover:border-purple-200 hover:shadow-sm transition-all">
+              <span className="text-2xl mb-4 block">{emoji}</span>
+              <p className="text-xs text-gray-400 line-through mb-2">{bad}</p>
+              <p className="text-base font-bold text-gray-900 leading-snug">{good}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Before / After */}
-      <section className="mx-auto max-w-5xl px-4 md:px-6 py-16 md:py-20">
-        <h2 className="mb-10 text-2xl md:text-3xl font-black text-gray-900">{t.before_after.title}</h2>
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          {/* Before */}
-          <div className="rounded-2xl border-2 border-red-100 bg-red-50 p-5 md:p-6">
-            <span className="inline-block mb-4 rounded-lg bg-red-100 px-3 py-1 text-xs font-black text-red-500 tracking-widest">
-              {t.before_after.before.label}
-            </span>
-            <ul className="space-y-3">
-              {t.before_after.before.items.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="text-red-300 mt-0.5 flex-shrink-0">✗</span>
-                  <span className="text-sm md:text-base text-gray-600 line-through">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {/* After */}
-          <div className="rounded-2xl border-2 border-green-100 bg-green-50 p-5 md:p-6">
-            <span className="inline-block mb-4 rounded-lg bg-green-100 px-3 py-1 text-xs font-black text-green-600 tracking-widest">
-              {t.before_after.after.label}
-            </span>
-            <ul className="space-y-3">
-              {t.before_after.after.items.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
-                  <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* 작동 방식 */}
-      <section className="bg-gray-50 px-4 md:px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-2xl md:text-3xl font-black text-gray-900">{t.how.title}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {t.how.steps.map(({ num, emoji, title, desc }) => (
-              <div key={num} className="group rounded-2xl bg-white border-2 border-gray-100 p-5 md:p-6 hover:border-purple-200 hover:shadow-md transition-all">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-3xl">{emoji}</span>
-                  <span className="text-sm font-black text-purple-200 group-hover:text-purple-400 transition-colors">{num}</span>
-                </div>
-                <p className="mb-2 font-bold text-gray-900">{title}</p>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
+      <section className="bg-gray-50 border-y border-gray-100 px-4 md:px-6 py-16">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-10 text-2xl md:text-3xl font-black text-gray-900">{t.before_after.title}</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border-2 border-red-100 bg-red-50 p-5 md:p-6">
+              <span className="inline-block mb-4 rounded-lg bg-red-100 px-3 py-1 text-xs font-black text-red-500 tracking-widest">{t.before_after.before.label}</span>
+              <ul className="space-y-3">
+                {t.before_after.before.items.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="text-red-300 mt-0.5 flex-shrink-0">✗</span>
+                    <span className="text-sm text-gray-600 line-through">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border-2 border-green-100 bg-green-50 p-5 md:p-6">
+              <span className="inline-block mb-4 rounded-lg bg-green-100 px-3 py-1 text-xs font-black text-green-600 tracking-widest">{t.before_after.after.label}</span>
+              <ul className="space-y-3">
+                {t.before_after.after.items.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-sm text-gray-700 font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -334,15 +354,12 @@ export default function LandingPage() {
       {/* 후기 */}
       <section className="mx-auto max-w-5xl px-4 md:px-6 py-16 md:py-20">
         <h2 className="mb-10 text-2xl md:text-3xl font-black text-gray-900">{t.testimonials.title}</h2>
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-          {t.testimonials.items.map(({ text, name, info, emoji }) => (
-            <div key={name} className="rounded-2xl border border-gray-100 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-              <span className="text-2xl mb-4 block">{emoji}</span>
-              <p className="text-sm md:text-base text-gray-700 leading-relaxed mb-5">"{text}"</p>
+        <div className="grid md:grid-cols-3 gap-4">
+          {t.testimonials.items.map(({ text, name, info }) => (
+            <div key={name} className="rounded-2xl border border-gray-100 bg-white p-5 md:p-6 shadow-sm">
+              <p className="text-sm text-gray-700 leading-relaxed mb-5">"{text}"</p>
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-600">
-                  {name.charAt(0)}
-                </div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-600">{name.charAt(0)}</div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">{name}</p>
                   <p className="text-xs text-gray-400">{info}</p>
@@ -353,44 +370,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 기능 그리드 */}
-      <section className="bg-gray-900 px-4 md:px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-2xl md:text-3xl font-black text-white">{t.features.title}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {t.features.items.map(({ emoji, title, desc }) => (
-              <div key={title} className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/8 transition-colors">
-                <span className="text-2xl mb-3 block">{emoji}</span>
-                <p className="font-bold text-white mb-1">{title}</p>
-                <p className="text-sm text-gray-400 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* 만든 이유 */}
-      <section className="border-b border-gray-100 bg-gray-50 px-4 md:px-6 py-12 md:py-14">
+      <section className="bg-gray-900 px-4 md:px-6 py-14 md:py-16">
         <div className="mx-auto max-w-2xl">
-          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-purple-500">{t.story.title}</p>
-          <p className="text-lg md:text-xl text-gray-700 leading-relaxed font-medium whitespace-pre-line">
-            "{t.story.body}"
-          </p>
-          <p className="mt-4 text-sm text-gray-400">{t.story.name}</p>
-        </div>
-      </section>
-
-      {/* 스트릭 */}
-      <section className="border-b border-gray-100 px-4 py-10 md:py-12">
-        <div className="mx-auto max-w-sm text-center">
-          <p className="mb-4 text-sm font-medium text-gray-400">매일 하면 스트릭 쌓여요</p>
-          <div className="flex justify-center gap-2">
-            {[1,2,3,4,5,6,7].map(d => (
-              <div key={d} className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${d <= 5 ? "bg-orange-100 text-orange-500" : "bg-gray-100 text-gray-300"}`}>
-                {d <= 5 ? "🔥" : d}
-              </div>
-            ))}
-          </div>
+          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-purple-400">{t.story.q}</p>
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed whitespace-pre-line font-medium">"{t.story.a}"</p>
+          <p className="mt-5 text-sm text-gray-500">{t.story.name}</p>
         </div>
       </section>
 
