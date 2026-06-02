@@ -269,6 +269,23 @@ function AnalysisContent() {
     }
   }
 
+  const [textCopied, setTextCopied] = useState(false)
+
+  const handleCopyText = () => {
+    if (!result) return
+    const text = [
+      `# ${result.oneLiner}`,
+      result.summary ? `\n${result.summary}` : "",
+      `\n## 핵심 개념`,
+      ...result.concepts.map(c => `- **${c.name}**: ${c.simple}`),
+      `\n## 시험 포인트`,
+      ...result.examPoints.map((p, i) => `${i + 1}. ${p}`),
+    ].join("\n")
+    navigator.clipboard.writeText(text)
+    setTextCopied(true)
+    setTimeout(() => setTextCopied(false), 2000)
+  }
+
   const handleShare = async () => {
     const shareUrl = id
       ? `${window.location.origin}/share/${id}`
@@ -367,6 +384,10 @@ function AnalysisContent() {
                     </Button>
                   </Link>
                 )}
+                <Button variant="outline" size="sm" className="rounded-xl text-xs gap-1" onClick={handleCopyText}>
+                  {textCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {textCopied ? "복사됨!" : "텍스트 복사"}
+                </Button>
                 <Button variant="outline" size="sm" className="rounded-xl text-xs gap-1" onClick={handleShare}>
                   {copied ? <Check className="h-3.5 w-3.5" /> : <Share2 className="h-3.5 w-3.5" />}
                   {copied ? "복사됨!" : "공유"}
