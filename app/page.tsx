@@ -9,8 +9,8 @@ const COPY = {
     nav: { browse: "둘러보기", login: "시작하기" },
     hero: {
       badge: "AI 학습 코치",
-      h1: "강의 PDF를 올리면\nAI가 예상 점수까지\n계산합니다.",
-      sub: "핵심 개념, 취약 개념, 오늘 공부할 내용.\n뭘 해야 할지 모를 때 쓰는 학습 코치.",
+      h1: "시험 일주일 전.\n지금 상태로 보면\n몇 점 나올까요?",
+      sub: "강의 PDF를 분석해\n예상 점수, 취약 개념, 오늘 공부할 내용을 알려드립니다.",
       cta: "Google로 무료 시작",
       sub2: "신용카드 없어도 돼 · 월 5회 무료",
     },
@@ -75,19 +75,19 @@ const COPY = {
       title: "실제로 쓴 사람들",
       items: [
         {
-          text: "네트워크 중간고사 전날에 썼는데 뭘 공부해야 할지 바로 알 수 있었어요. 교수님 슬라이드 70장을 30분 만에 정리한 느낌.",
+          text: "컴퓨터네트워크 중간고사 준비할 때 썼는데, 슬라이드 70장에서 취약 개념 4개 바로 잡아줬어요. 그 중 2개가 실제 시험에 나왔음.",
           name: "이○○",
-          info: "컴공 3학년",
+          info: "홍익대학교 컴퓨터공학과 3학년",
         },
         {
-          text: "시험 예상 점수 기능이 신기했어요. 처음엔 반신반의했는데 실제 시험이랑 비슷하게 나와서 놀랐음.",
+          text: "예상 점수 기능이 실제 시험이랑 비슷하게 나와서 놀랐어요. 처음엔 반신반의했는데 두 번 써보니까 제법 맞음.",
           name: "김○○",
-          info: "경영학 4학년",
+          info: "서울대학교 경영학과 4학년",
         },
         {
-          text: "오답노트 자동으로 쌓이는 게 진짜 좋아요. 퀴즈 틀린 거 나중에 몰아서 다시 볼 수 있으니까.",
+          text: "시험 전날 PDF 올렸는데 오늘 뭐 공부해야 하는지 바로 나와서 편했어요. 목록 보고 그냥 그대로 했음.",
           name: "박○○",
-          info: "전자공학 2학년",
+          info: "연세대학교 전자전기공학부 2학년",
         },
       ],
     },
@@ -108,8 +108,8 @@ const COPY = {
     nav: { browse: "Browse", login: "Get started" },
     hero: {
       badge: "AI Study Coach",
-      h1: "Upload a lecture PDF.\nGet your predicted\nexam score.",
-      sub: "Key concepts, weak spots, what to study today.\nFor students who don't know where to start.",
+      h1: "One week before exams.\nWhat score would you get\nright now?",
+      sub: "Upload your lecture PDF.\nGet your predicted score, weak spots, and what to study today.",
       cta: "Start free with Google",
       sub2: "No credit card needed · 5 free analyses/month",
     },
@@ -271,12 +271,16 @@ export default function LandingPage() {
                 <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-600">분석 완료</span>
               </div>
               <div className="p-4 space-y-3">
-                {/* 예상 점수 */}
-                <div className="flex items-center gap-3 rounded-xl bg-purple-50 border border-purple-100 p-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-lg">72</div>
-                  <div>
-                    <p className="text-[11px] text-purple-500 font-medium">예상 점수</p>
-                    <p className="text-xs text-gray-500">12개 개념 · 퀴즈 정답률 78%</p>
+                {/* 예상 점수 — 주인공 */}
+                <div className="rounded-2xl bg-purple-600 p-4 text-white">
+                  <p className="text-xs text-purple-200 font-medium mb-1">예상 점수</p>
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-5xl font-black leading-none">72</span>
+                    <span className="text-lg font-bold text-purple-300 mb-1">점</span>
+                    <span className="ml-auto text-xs text-purple-200 mb-1">상위 25%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-purple-500 overflow-hidden">
+                    <div className="h-full bg-white rounded-full" style={{ width: "72%" }} />
                   </div>
                 </div>
                 {/* 취약 개념 */}
@@ -407,6 +411,38 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 신뢰 섹션 — 예상 점수 계산 방식 */}
+      <section className="bg-gray-50 border-y border-gray-100 px-4 md:px-6 py-14">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-purple-500 mb-3">왜 믿어야 하나요?</p>
+          <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8">예상 점수 계산 방식</h2>
+          <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="space-y-3">
+              {[
+                { label: "퀴즈 정답률", value: "78%", color: "text-green-600 bg-green-500/10", desc: "AI 퀴즈에서 맞춘 비율" },
+                { label: "이해한 개념", value: "12개", color: "text-primary bg-primary/10", desc: "직접 체크한 이해 개념 수" },
+                { label: "헷갈리는 개념", value: "3개", color: "text-orange-500 bg-orange-500/10", desc: "복습 필요로 표시한 개념" },
+                { label: "D-Day 보정", value: "D-6", color: "text-destructive bg-destructive/10", desc: "시험까지 남은 시간 반영" },
+              ].map(({ label, value, color, desc }) => (
+                <div key={label} className="flex items-center gap-3 rounded-xl bg-white border border-gray-100 p-3">
+                  <span className={`rounded-lg px-2.5 py-1 text-sm font-black ${color}`}>{value}</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{label}</p>
+                    <p className="text-xs text-gray-400">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-purple-600 p-8 text-white">
+              <p className="text-sm text-purple-200 mb-3">종합 예상 점수</p>
+              <span className="text-7xl font-black leading-none">72</span>
+              <span className="text-2xl text-purple-300 mt-1">점</span>
+              <p className="text-xs text-purple-200 mt-4 text-center">퀴즈 결과 + 이해도 + D-Day를<br />종합해서 계산합니다</p>
             </div>
           </div>
         </div>
