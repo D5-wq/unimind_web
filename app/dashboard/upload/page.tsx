@@ -7,7 +7,7 @@ import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
 import {
   Upload, FileText, Presentation, X, CheckCircle, Loader2, Sparkles, File, AlertCircle,
-  Crown, Lock,
+  Crown, Lock, BookOpen, ChevronDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -126,6 +126,13 @@ function formatFileSize(bytes: number): string {
 
 export default function UploadPage() {
   const [files, setFiles] = useState<UploadedFile[]>([])
+  const [courses, setCourses] = useState<{ id: string; name: string }[]>([])
+  const [selectedCourse, setSelectedCourse] = useState<string>("")
+
+  useEffect(() => {
+    const saved = storageGet<{ id: string; name: string }[]>(STORAGE_KEYS.courses, [])
+    setCourses(saved)
+  }, [])
   const [isDragging, setIsDragging] = useState(false)
   const [showLimit, setShowLimit] = useState(false)
   const router = useRouter()
@@ -168,7 +175,19 @@ export default function UploadPage() {
       ))
 
       storageSet(STORAGE_KEYS.analysis(storageId), result)
-      storageSet(STORAGE_KEYS.analysisMeta(storageId), { fileName: file.name, name: file.name, uploadedAt: Date.now() })
+      storageSet(STORAGE_KEYS.analysisMeta(storageId), {
+        fileName: file.name, name: file.name, uploadedAt: Date.now(),
+        courseId: selectedCourse || null,
+        courseName: courses.find(c => c.id === selectedCourse)?.name || null,
+      })
+
+      // 강의에 분석 연결
+      if (selectedCourse) {
+        const linked = storageGet<string[]>(STORAGE_KEYS.courseAnalyses(selectedCourse), [])
+        if (!linked.includes(storageId)) {
+          storageSet(STORAGE_KEYS.courseAnalyses(selectedCourse), [storageId, ...linked])
+        }
+      }
 
       await reload()
       select(storageId)
@@ -318,6 +337,23 @@ export default function UploadPage() {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 강의 선택 */}
+        {courses.length > 0 && (
+          <div className="flex items-center gap-3">
+            <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <select
+              value={selectedCourse}
+              onChange={e => setSelectedCourse(e.target.value)}
+              className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="">강의 선택 안 함</option>
+              {courses.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         )}
 

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 import { useAnalysis } from "@/components/dashboard/analysis-context"
 import { useAuth } from "@/components/dashboard/auth-context"
 import { AnalysisSkeleton } from "@/components/ui/skeleton"
+import { FadeIn } from "@/components/ui/motion"
 import { scheduleReview, completeReview, getNextReview } from "@/lib/spaced-repetition"
 import { logEvent, EVENTS } from "@/lib/events"
 import Link from "next/link"
@@ -340,6 +341,7 @@ function AnalysisContent() {
     <div className="flex flex-col">
       <Header title="분석 결과" subtitle="AI가 분석한 강의 내용을 확인하세요" />
       <div className="flex-1 p-6">
+      <FadeIn>
 
         {/* 예상 점수 + 공유 카드 */}
         {(() => {
@@ -907,6 +909,7 @@ function AnalysisContent() {
             </div>
           </TabsContent>
         </Tabs>
+      </FadeIn>
       </div>
 
       {/* ── 플로팅 AI 채팅 버튼 ── */}

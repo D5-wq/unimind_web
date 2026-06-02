@@ -24,6 +24,9 @@ export const STORAGE_KEYS = {
   courses: "courses",
   exams: "exams",
   notifications: "notifications",
+
+  // 강의-분석 연결
+  courseAnalyses: (courseId: string) => `course-analyses-${courseId}`,
 } as const
 
 function isClient() {

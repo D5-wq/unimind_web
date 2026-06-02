@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation"
 import { getStreak, getStreakEmoji, isStreakAtRisk, type StreakData } from "@/lib/streak"
 import { getDueCards, getReviewSummary, type RepCard } from "@/lib/spaced-repetition"
 import { STORAGE_KEYS, storageGet } from "@/lib/storage"
+import { FadeIn } from "@/components/ui/motion"
 
 interface AnalysisEntry {
   id: string; name: string; uploadedAt: number
@@ -165,6 +166,7 @@ export default function DashboardPage() {
     <div className="flex flex-col">
       <Header title="대시보드" subtitle="학습 현황을 한눈에 확인하세요" />
       <div className="flex-1 space-y-6 p-4 md:p-6">
+        <FadeIn delay={0}>
 
         {/* 온보딩 카드 — 첫 방문자 */}
         {analyses.length === 0 && !upgraded && (
@@ -657,6 +659,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        </FadeIn>
       </div>
     </div>
   )
