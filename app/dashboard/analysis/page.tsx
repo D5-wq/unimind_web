@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useState, useMemo, useRef } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { supabase } from "@/lib/supabase"
 import {
@@ -115,10 +115,18 @@ const DIFF_CLS = (d?: string) =>
 
 function AnalysisContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const id = searchParams.get("id")
-  const { selectedAnalysis: ctxAnalysis, allAnalyses } = useAnalysis()
+  const { selectedAnalysis: ctxAnalysis, allAnalyses, select } = useAnalysis()
 
   const { user } = useAuth()
+
+  // id 없으면 첫 번째 분석으로 자동 이동
+  useEffect(() => {
+    if (!id && allAnalyses.length > 0) {
+      router.replace(`/dashboard/analysis?id=${allAnalyses[0].id}`)
+    }
+  }, [id, allAnalyses])
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [zoom, setZoom] = useState(1)
@@ -376,6 +384,29 @@ function AnalysisContent() {
   return (
     <div className="flex flex-col">
       <Header title="분석 결과" subtitle="AI가 분석한 강의 내용을 확인하세요" />
+
+      {/* 파일 선택 바 */}
+      {allAnalyses.length > 1 && (
+        <div className="border-b border-border bg-card px-6 py-2.5 flex items-center gap-3">
+          <span className="text-xs text-muted-foreground flex-shrink-0">강의 선택:</span>
+          <div className="flex gap-2 overflow-x-auto pb-0.5 hide-scrollbar">
+            {allAnalyses.slice(0, 8).map(a => (
+              <button
+                key={a.id}
+                onClick={() => { select(a.id); router.push(`/dashboard/analysis?id=${a.id}`) }}
+                className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  a.id === id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {a.fileName.replace(/\.[^.]+$/, "").slice(0, 20)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 p-6">
       <FadeIn>
 

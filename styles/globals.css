@@ -126,6 +126,9 @@
   h1, h2, h3, h4 {
     letter-spacing: -0.03em;
   }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   /* SaaS 감성 — 카드 그림자 없애고 얇은 보더만 */
   .shadow-sm { box-shadow: none !important; }
   .shadow { box-shadow: none !important; }

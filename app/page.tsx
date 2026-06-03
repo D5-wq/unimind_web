@@ -200,7 +200,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen text-gray-900" style={{ background: "radial-gradient(ellipse 80% 60% at 60% 0%, rgba(124,58,237,0.08) 0%, transparent 60%), #ffffff" }}>
 
       {/* 네비 */}
       <nav className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-gray-100 bg-white/90 px-4 md:px-10 backdrop-blur-sm">
@@ -257,59 +257,83 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* 오른쪽: 제품 목업 */}
-          <div className="relative">
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-              {/* 앱 헤더 */}
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+          {/* 오른쪽: 프리미엄 목업 */}
+          <div className="relative hidden md:block">
+            {/* 배경 glow */}
+            <div className="absolute inset-0 -z-10 rounded-3xl bg-purple-400/20 blur-3xl scale-110" />
+
+            {/* 메인 카드 — 글래스모피즘 */}
+            <div className="rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-2xl overflow-hidden">
+              {/* 상단 파일명 바 */}
+              <div className="flex items-center gap-2 border-b border-gray-100/60 bg-white/50 px-4 py-2.5">
                 <div className="flex gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-red-400" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                  <div className="h-3 w-3 rounded-full bg-green-400" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
                 </div>
-                <span className="text-xs text-gray-400 ml-2">컴퓨터네트워크_7주차.pdf</span>
-                <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-600">분석 완료</span>
+                <span className="text-[11px] text-gray-400 ml-1.5">컴퓨터네트워크_7주차.pdf</span>
+                <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-600 tracking-wide">분석 완료</span>
               </div>
-              <div className="p-4 space-y-3">
-                {/* 예상 점수 — 주인공 */}
-                <div className="rounded-2xl bg-purple-600 p-4 text-white">
-                  <p className="text-xs text-purple-200 font-medium mb-1">예상 점수</p>
-                  <div className="flex items-end gap-2 mb-2">
-                    <span className="text-5xl font-black leading-none">72</span>
-                    <span className="text-lg font-bold text-purple-300 mb-1">점</span>
-                    <span className="ml-auto text-xs text-purple-200 mb-1">상위 25%</span>
+
+              <div className="p-5 grid grid-cols-2 gap-3">
+                {/* 도넛 차트 점수 카드 */}
+                <div className="col-span-1 rounded-2xl p-4 flex flex-col items-center justify-center" style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+                  <p className="text-[10px] text-purple-200 font-semibold mb-2 tracking-wider uppercase">예상 점수</p>
+                  {/* SVG 도넛 차트 */}
+                  <div className="relative">
+                    <svg width="90" height="90" viewBox="0 0 90 90">
+                      <circle cx="45" cy="45" r="35" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="8" />
+                      <circle cx="45" cy="45" r="35" fill="none" stroke="url(#scoreGrad)" strokeWidth="8"
+                        strokeDasharray={`${2 * Math.PI * 35 * 0.72} ${2 * Math.PI * 35 * 0.28}`}
+                        strokeDashoffset={2 * Math.PI * 35 * 0.25}
+                        strokeLinecap="round"
+                        transform="rotate(-90 45 45)"
+                      />
+                      <defs>
+                        <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#A78BFA" />
+                          <stop offset="100%" stopColor="#34D399" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-black text-white leading-none">72</span>
+                      <span className="text-[9px] text-purple-200 font-medium">점</span>
+                    </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-purple-500 overflow-hidden">
-                    <div className="h-full bg-white rounded-full" style={{ width: "72%" }} />
-                  </div>
+                  <span className="mt-1 text-[10px] text-purple-200">상위 25%</span>
                 </div>
-                {/* 취약 개념 */}
-                <div>
-                  <p className="text-[11px] font-bold text-red-500 mb-1.5">⚠ 집중 필요</p>
-                  <div className="flex flex-wrap gap-1.5">
+
+                {/* 우측 카드들 */}
+                <div className="col-span-1 space-y-2.5">
+                  {/* 집중 필요 */}
+                  <div className="rounded-xl bg-red-50/80 border border-red-100/60 p-2.5">
+                    <p className="text-[9px] font-bold text-red-500 mb-1.5 uppercase tracking-wider">집중 필요</p>
                     {["Congestion Control", "Flow Control", "DNS"].map(c => (
-                      <span key={c} className="rounded-lg bg-red-50 border border-red-100 text-red-500 text-[11px] px-2 py-0.5">{c}</span>
+                      <div key={c} className="flex items-center gap-1.5 py-0.5">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                        <span className="text-[10px] text-gray-700 truncate">{c}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* 오늘 공부할 것 */}
+                  <div className="rounded-xl bg-white/60 border border-gray-100/60 p-2.5">
+                    <p className="text-[9px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">오늘 공부할 것</p>
+                    {["Sliding Window", "TCP State Machine", "3-Way Handshake"].map((item, i) => (
+                      <div key={item} className="flex items-center gap-1.5 py-0.5">
+                        <span className="text-[9px] font-black text-purple-500 w-3">{i + 1}</span>
+                        <span className="text-[10px] text-gray-700 truncate">{item}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
-                {/* 추천 학습 */}
-                <div>
-                  <p className="text-[11px] font-bold text-gray-500 mb-1.5">오늘 공부할 것</p>
-                  {["Sliding Window Protocol", "TCP State Machine", "3-Way Handshake 복습"].map((item, i) => (
-                    <div key={item} className="flex items-center gap-2 py-1">
-                      <span className="text-[11px] font-black text-purple-400 w-4">{i + 1}</span>
-                      <span className="text-xs text-gray-700">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* 퀴즈 버튼 */}
-                <div className="rounded-xl bg-gray-900 py-2.5 text-center">
-                  <span className="text-xs font-bold text-white">퀴즈 40문제 시작 →</span>
+
+                {/* 퀴즈 버튼 — 전체 너비 */}
+                <div className="col-span-2 rounded-2xl py-3 text-center cursor-pointer" style={{ background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)" }}>
+                  <span className="text-[11px] font-black text-white tracking-wide">퀴즈 40문제 시작 →</span>
                 </div>
               </div>
             </div>
-            {/* 그림자 효과 */}
-            <div className="absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-2xl bg-purple-100" />
           </div>
         </div>
       </section>
